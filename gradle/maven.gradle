@@ -40,9 +40,23 @@ task androidSourcesJar(type: Jar) {
     from android.sourceSets.main.java.source
 }
 
+android.libraryVariants.all {
+    if (it.name == 'release') {
+        def scope = it.variantData.scope
+        androidSourcesJar.dependsOn scope.javacTask.name
+        androidSourcesJar.from scope.annotationProcessorOutputDir, scope.buildConfigSourceOutputDir
+    }
+}
+
 task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.source
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    android.libraryVariants.all { variant ->
+        if (variant.name == 'release') {
+            owner.classpath += variant.javaCompile.classpath
+        }
+    }
+    exclude '**/R.html', '**/R.*.html', '**/index.html'
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
@@ -128,23 +142,18 @@ uploadArchives {
     }
 }
 
-signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
 // 2. Config archives
 artifacts {
     archives androidSourcesJar
     archives androidJavadocsJar
 }
 
-afterEvaluate {
-    android.libraryVariants.all {
-        if (it.name == 'release') {
-            def scope = it.variantData.scope
-            androidSourcesJar.dependsOn scope.javacTask.name
-            androidSourcesJar.from scope.annotationProcessorOutputDir, scope.buildConfigSourceOutputDir
-        }
-    }
+// ----------
+// Signing
+// https://docs.gradle.org/current/userguide/signing_plugin.html
+// ----------
+signing {
+    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
 }
+
