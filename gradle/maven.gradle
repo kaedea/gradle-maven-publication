@@ -132,11 +132,16 @@ uploadArchives {
             }
 
             // 5. Config maven repository
-            repository(url: getReleaseRepositoryUrl()) {
-                authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-            }
-            snapshotRepository(url: getSnapshotRepositoryUrl()) {
-                authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+            if (!getReleaseRepositoryUrl() && !getSnapshotRepositoryUrl()) {
+                // publish to local maven
+                repository(url: uri(rootProject.file('maven')))
+            } else {
+                repository(url: getReleaseRepositoryUrl()) {
+                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                }
+                snapshotRepository(url: getSnapshotRepositoryUrl()) {
+                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                }
             }
         }
     }
