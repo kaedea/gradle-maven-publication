@@ -6,8 +6,8 @@ apply plugin: 'maven-publish'
 
 // Sometimes plugin/service reads value from project 'group/name/version'
 // We can set the value here except 'name', which is read-only
-// group = GROUP
-// version = VERSION_NAME
+group = GROUP
+version = VERSION_NAME
 
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
@@ -58,7 +58,9 @@ task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
 tasks.withType(Javadoc).all {
     options.encoding = "UTF-8"
     options.addStringOption('encoding', 'UTF-8')
-    options.addStringOption('Xdoclint:none', '-quiet')
+    if (JavaVersion.current().isJava8Compatible()) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
 }
 
 tasks.withType(JavaCompile) {
@@ -72,32 +74,28 @@ tasks.withType(JavaCompile) {
 publishing {
     publications {
         mavenAndroid(MavenPublication) {
-            // 1. Artifact config:
+            // 1. Config artifact ids
             groupId GROUP
             artifactId POM_ARTIFACT_ID
             version = VERSION_NAME
 
-            // 2. Artifact packaging:
+            // 2. Config archives:
             // aar, source.jar, javadoc.jar ...
             artifact bundleRelease
             artifact androidSourcesJar
             artifact androidJavadocsJar
 
-            // 3. Handling pom.xml
             pom.withXml {
                 def node = asNode()
-                // Handling children dependencies
                 final dependenciesNode = node.appendNode('dependencies')
-                ext.addDependency = { Dependency dep, String scope ->
+                def addDependency = { Dependency dep, String scope ->
                     if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified")
                         return // ignore invalid dependencies
-
                     final dependencyNode = dependenciesNode.appendNode('dependency')
                     dependencyNode.appendNode('groupId', dep.group)
                     dependencyNode.appendNode('artifactId', dep.name)
                     dependencyNode.appendNode('version', dep.version)
                     dependencyNode.appendNode('scope', scope)
-
                     if (!dep.transitive) {
                         // If this dependency is transitive, we should force exclude all its dependencies them from the POM
                         final exclusionNode = dependencyNode.appendNode('exclusions').appendNode('exclusion')
@@ -112,8 +110,9 @@ publishing {
                         }
                     }
                 }
-                // Gradle dependencies configurations to maven dependencies scope:
-                // Add more configurations here
+                // 4. Handling transitive dependencies
+                // Gradle dependencies configurations to maven dependencies scope
+                // Add more configurations here:
                 // +--------------------------------+
                 // | compile        -> pom compile  |
                 // | provided       -> pom provided |
@@ -129,7 +128,7 @@ publishing {
                 configurations.compileOnly.getAllDependencies().each { dep -> addDependency(dep, "provided") }
                 configurations.runtimeOnly.getAllDependencies().each { dep -> addDependency(dep, "runtime") }
 
-                // POM extra info
+                // 3. Config pom.xml extra info
                 node.children().last() + {
                     resolveStrategy = Closure.DELEGATE_FIRST
                     name POM_NAME
@@ -161,6 +160,7 @@ publishing {
         }
     }
 
+    // 5. Config maven repository
     repositories {
         maven {
             url isReleaseBuild() ? getReleaseRepositoryUrl() : getSnapshotRepositoryUrl()
@@ -171,3 +171,18 @@ publishing {
         }
     }
 }
+
+
+// ----------
+// Signing
+// Supported from gradle 4.8 latest nightly
+// https://discuss.gradle.org/t/how-to-publish-artifacts-signatures-asc-files-using-maven-publish-plugin/7422/23
+// ----------
+// apply plugin: 'signing'
+//
+// afterEvaluate {
+//     signing {
+//         required { isReleaseBuild() && gradle.taskGraph.hasTask("publish") }
+//         sign publishing.publications.mavenAndroid
+//     }
+// }
