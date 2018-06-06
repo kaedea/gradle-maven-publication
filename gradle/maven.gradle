@@ -1,0 +1,150 @@
+// ----------
+// Maven gradle plugin 'maven'
+// https://docs.gradle.org/current/userguide/maven_plugin.html
+// ----------
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+// Sometimes plugin/service reads value from project 'group/name/version'
+// We can set the value here except 'name', which is read-only
+// group = GROUP
+// version = VERSION_NAME
+
+def isReleaseBuild() {
+    return VERSION_NAME.contains("SNAPSHOT") == false
+}
+
+def getReleaseRepositoryUrl() {
+    return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+            : System.env.RELEASE_REPOSITORY_URL
+}
+
+def getSnapshotRepositoryUrl() {
+    return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+            : System.env.RELEASE_REPOSITORY_URL
+}
+
+def getRepositoryUsername() {
+    return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : System.env.NEXUS_USERNAME
+}
+
+def getRepositoryPassword() {
+    return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : System.env.NEXUS_PASSWORD
+}
+
+// ----------
+// Config of packaging tasks
+// ----------
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.source
+}
+
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.source
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
+
+// ----------
+// Configuration of 'maven-publish'
+// Run ':uploadArchives' to publish the artifact to maven repository
+// ----------
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            pom.project {
+
+                // 1. Config artifact ids
+                groupId GROUP
+                artifactId POM_ARTIFACT_ID
+                version VERSION_NAME
+
+                // 3. Config pom.xml extra info
+                name POM_NAME
+                packaging POM_PACKAGING
+                url POM_URL
+                description POM_DESCRIPTION
+                scm {
+                    url POM_SCM_URL
+                    connection POM_SCM_CONNECTION
+                    developerConnection POM_SCM_DEV_CONNECTION
+                }
+                licenses {
+                    license {
+                        name POM_LICENCE_NAME
+                        url POM_LICENCE_URL
+                        distribution POM_LICENCE_DIST
+                    }
+                }
+                developers {
+                    developer {
+                        id POM_DEVELOPER_ID
+                        name POM_DEVELOPER_NAME
+                    }
+                }
+
+                // 4. Handling transitive dependencies
+                // Gradle dependencies configurations to maven dependencies scope:
+                // +----------------------------------------+
+                // | compile        -> pom compile  (force) |
+                // | provided       -> pom provided (custom)|
+                // | api            -> pom compile  (force) |
+                // | implementation -> pom compile  (force) |
+                // | compileOnly    -> pom provided (custom)|
+                // | runtimeOnly    -> pom compile  (force) |
+                // +----------------------------------------+
+                // force: maven has force converted the scope mapping, we can do no more
+                // custom: customize the scope mapping in the following
+                def scopeMappings = pom.scopeMappings
+                def addDependency = { configuration, scope ->
+                    if (configuration != null) scopeMappings.addMapping(1, configuration, scope)
+                }
+                addDependency(configurations.provided, 'provided')
+                addDependency(configurations.compileOnly, 'provided')
+            }
+
+            // 5. Config maven repository
+            repository(url: getReleaseRepositoryUrl()) {
+                authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+            }
+            snapshotRepository(url: getSnapshotRepositoryUrl()) {
+                authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+            }
+        }
+    }
+}
+
+signing {
+    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+// 2. Config archives
+artifacts {
+    archives androidSourcesJar
+    archives androidJavadocsJar
+}
+
+afterEvaluate {
+    android.libraryVariants.all {
+        if (it.name == 'release') {
+            def scope = it.variantData.scope
+            androidSourcesJar.dependsOn scope.javacTask.name
+            androidSourcesJar.from scope.annotationProcessorOutputDir, scope.buildConfigSourceOutputDir
+        }
+    }
+}
