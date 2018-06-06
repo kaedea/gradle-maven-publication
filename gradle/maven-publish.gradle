@@ -70,6 +70,8 @@ tasks.withType(JavaCompile) {
 // ----------
 // Configuration of 'maven-publish'
 // Run ':generatePomFileForMavenAndroidPublication' to locally generate pom.xml
+// Run ':publishToMavenLocal' to publish locally
+// Run ':publish' to publish the artifact to maven repository
 // ----------
 publishing {
     publications {
