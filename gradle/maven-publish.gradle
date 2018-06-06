@@ -1,0 +1,173 @@
+// ----------
+// Maven gradle plugin 'maven-publish'
+// https://docs.gradle.org/current/userguide/publishing_maven.html
+// ----------
+apply plugin: 'maven-publish'
+
+// Sometimes plugin/service reads value from project 'group/name/version'
+// We can set the value here except 'name', which is read-only
+// group = GROUP
+// version = VERSION_NAME
+
+def isReleaseBuild() {
+    return VERSION_NAME.contains("SNAPSHOT") == false
+}
+
+def getReleaseRepositoryUrl() {
+    return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+            : System.env.RELEASE_REPOSITORY_URL
+}
+
+def getSnapshotRepositoryUrl() {
+    return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+            : System.env.RELEASE_REPOSITORY_URL
+}
+
+def getRepositoryUsername() {
+    return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : System.env.NEXUS_USERNAME
+}
+
+def getRepositoryPassword() {
+    return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : System.env.NEXUS_PASSWORD
+}
+
+// ----------
+// Config of packaging tasks
+// ----------
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.source
+}
+
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    android.libraryVariants.all { variant ->
+        if (variant.name == 'release') {
+            owner.classpath += variant.javaCompile.classpath
+        }
+    }
+    exclude '**/R.html', '**/R.*.html', '**/index.html'
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
+tasks.withType(Javadoc).all {
+    options.encoding = "UTF-8"
+    options.addStringOption('encoding', 'UTF-8')
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+// ----------
+// Configuration of 'maven-publish'
+// Run ':generatePomFileForMavenAndroidPublication' to locally generate pom.xml
+// ----------
+publishing {
+    publications {
+        mavenAndroid(MavenPublication) {
+            // 1. Artifact config:
+            groupId GROUP
+            artifactId POM_ARTIFACT_ID
+            version = VERSION_NAME
+
+            // 2. Artifact packaging:
+            // aar, source.jar, javadoc.jar ...
+            artifact bundleRelease
+            artifact androidSourcesJar
+            artifact androidJavadocsJar
+
+            // 3. Handling pom.xml
+            pom.withXml {
+                def node = asNode()
+                // Handling children dependencies
+                final dependenciesNode = node.appendNode('dependencies')
+                ext.addDependency = { Dependency dep, String scope ->
+                    if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified")
+                        return // ignore invalid dependencies
+
+                    final dependencyNode = dependenciesNode.appendNode('dependency')
+                    dependencyNode.appendNode('groupId', dep.group)
+                    dependencyNode.appendNode('artifactId', dep.name)
+                    dependencyNode.appendNode('version', dep.version)
+                    dependencyNode.appendNode('scope', scope)
+
+                    if (!dep.transitive) {
+                        // If this dependency is transitive, we should force exclude all its dependencies them from the POM
+                        final exclusionNode = dependencyNode.appendNode('exclusions').appendNode('exclusion')
+                        exclusionNode.appendNode('groupId', '*')
+                        exclusionNode.appendNode('artifactId', '*')
+                    } else if (!dep.properties.excludeRules.empty) {
+                        // Otherwise add specified exclude rules
+                        final exclusionNode = dependencyNode.appendNode('exclusions').appendNode('exclusion')
+                        dep.properties.excludeRules.each { ExcludeRule rule ->
+                            exclusionNode.appendNode('groupId', rule.group ?: '*')
+                            exclusionNode.appendNode('artifactId', rule.module ?: '*')
+                        }
+                    }
+                }
+                // Gradle dependencies configurations to maven dependencies scope:
+                // Add more configurations here
+                // +--------------------------------+
+                // | compile        -> pom compile  |
+                // | provided       -> pom provided |
+                // | api            -> pom compile  |
+                // | implementation -> pom compile  |
+                // | compileOnly    -> pom provided |
+                // | runtimeOnly    -> pom runtime  |
+                // +--------------------------------+
+                configurations.compile.getAllDependencies().each { dep -> addDependency(dep, "compile") }
+                configurations.provided.getAllDependencies().each { dep -> addDependency(dep, "provided") }
+                configurations.api.getAllDependencies().each { dep -> addDependency(dep, "compile") }
+                configurations.implementation.getAllDependencies().each { dep -> addDependency(dep, "compile") }
+                configurations.compileOnly.getAllDependencies().each { dep -> addDependency(dep, "provided") }
+                configurations.runtimeOnly.getAllDependencies().each { dep -> addDependency(dep, "runtime") }
+
+                // POM extra info
+                node.children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name POM_NAME
+                    // packaging has been defined within 'artifact bundleRelease' above
+                    // packaging POM_PACKAGING
+                    url POM_URL
+                    description POM_DESCRIPTION
+
+                    scm {
+                        url POM_SCM_URL
+                        connection POM_SCM_CONNECTION
+                        developerConnection POM_SCM_DEV_CONNECTION
+                    }
+                    licenses {
+                        license {
+                            name POM_LICENCE_NAME
+                            url POM_LICENCE_URL
+                            distribution POM_LICENCE_DIST
+                        }
+                    }
+                    developers {
+                        developer {
+                            id POM_DEVELOPER_ID
+                            name POM_DEVELOPER_NAME
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url isReleaseBuild() ? getReleaseRepositoryUrl() : getSnapshotRepositoryUrl()
+            credentials {
+                username = getRepositoryUsername()
+                password = getRepositoryPassword()
+            }
+        }
+    }
+}
