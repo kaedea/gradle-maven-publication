@@ -30,12 +30,15 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1'
 
-    api 'com.squareup.picasso:picasso:2.71828'
-    api project(':lib-android-sub')
+    api project(':lib-java')
 }
 
 // with 'maven'
-apply from: new File(script_dir, '/maven.gradle')
+apply from: new File(script_dir/*
+ * Copyright (c) 2018. Kaede
+ */
+
+, '/maven.gradle')
 
 // with 'maven-publish'
 // apply from: new File(script_dir, '/maven-publish.gradle')
