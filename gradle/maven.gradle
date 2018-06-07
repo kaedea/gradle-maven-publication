@@ -165,7 +165,7 @@ uploadArchives {
                 // +---------------------------------------------+
                 // force: android plugin force converts the scope mapping, we can do no more
                 // default: java plugin default converts the scope mapping, can be modified
-                // unspecific: user has to specify the scope mapping, or will be removed
+                // unspecific: has to specify the scope mapping in the following, or will be removed
                 def scopeMappings = pom.scopeMappings
                 def addDependency = { configuration, scope ->
                     if (configuration != null) scopeMappings.addMapping(1, configuration, scope)
