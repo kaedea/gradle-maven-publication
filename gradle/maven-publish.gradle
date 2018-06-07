@@ -88,27 +88,65 @@ publishing {
             artifact androidJavadocsJar
 
             pom.withXml {
-                def node = asNode()
-                final dependenciesNode = node.appendNode('dependencies')
-                def addDependency = { Dependency dep, String scope ->
-                    if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified")
-                        return // ignore invalid dependencies
-                    final dependencyNode = dependenciesNode.appendNode('dependency')
-                    dependencyNode.appendNode('groupId', dep.group)
-                    dependencyNode.appendNode('artifactId', dep.name)
-                    dependencyNode.appendNode('version', dep.version)
-                    dependencyNode.appendNode('scope', scope)
-                    if (!dep.transitive) {
-                        // If this dependency is transitive, we should force exclude all its dependencies them from the POM
-                        final exclusionNode = dependencyNode.appendNode('exclusions').appendNode('exclusion')
-                        exclusionNode.appendNode('groupId', '*')
-                        exclusionNode.appendNode('artifactId', '*')
-                    } else if (!dep.properties.excludeRules.empty) {
-                        // Otherwise add specified exclude rules
-                        final exclusionNode = dependencyNode.appendNode('exclusions').appendNode('exclusion')
-                        dep.properties.excludeRules.each { ExcludeRule rule ->
-                            exclusionNode.appendNode('groupId', rule.group ?: '*')
-                            exclusionNode.appendNode('artifactId', rule.module ?: '*')
+                def dependenciesNode = asNode().appendNode('dependencies')
+                def finished = []
+                def addDependency = { configuration, scope ->
+                    configuration.allDependencies.each { dep ->
+                        if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified"
+                                || finished.contains(dep))
+                            return
+                        finished << dep
+
+                        // DefaultProjectDependency (local module) should be resolved first,
+                        // or its version with be 'unspecified'. Besides we can also get the type
+                        // after resolving
+                        def dependencyFiles
+                        def extension
+                        def error
+                        try {
+                            dependencyFiles = configuration.files(dep)
+                        } catch (ignored) {
+                            // Maybe 'Resolving configuration xxx directly is not allowed'
+                            // Try to resolve with archives configuration any way
+                            error = ignored
+                            try {
+                                dependencyFiles = configurations.archives.files(dep)
+                            } catch (exception) {error = exception}
+                        }
+                        if (dependencyFiles != null && dependencyFiles.size() > 0) {
+                            def firstFile = dependencyFiles.first()
+                            extension = firstFile.name.substring(firstFile.name.lastIndexOf(".") + 1)
+                        }
+                        def version = dep.version
+                        if (version == "unspecified") {
+                            // This is our last chance, retrieve directly from project property
+                            version = project.version
+                            if (version == "unspecified")
+                                throw new GradleException(
+                                        "Can not resolve verson of [$dep.name] ${error ? error.message : ''}"
+                                )
+                        }
+
+                        def node = dependenciesNode.appendNode('dependency')
+                        node.appendNode('groupId', dep.group)
+                        node.appendNode('artifactId', dep.name)
+                        node.appendNode('version', version)
+                        node.appendNode('scope', scope)
+                        if (extension) node.appendNode('type', extension)
+
+                        // Exclusions (transitive dependencies of the current dependency)
+                        if (!dep.transitive) {
+                            // If this dependency is transitive, we should force exclude all its dependencies them from the POM
+                            final exclusionNode = node.appendNode('exclusions').appendNode('exclusion')
+                            exclusionNode.appendNode('groupId', '*')
+                            exclusionNode.appendNode('artifactId', '*')
+                        } else if (!dep.properties.excludeRules.empty) {
+                            // Otherwise add specified exclude rules
+                            final exclusionNode = node.appendNode('exclusions').appendNode('exclusion')
+                            dep.properties.excludeRules.each { ExcludeRule rule ->
+                                exclusionNode.appendNode('groupId', rule.group ?: '*')
+                                exclusionNode.appendNode('artifactId', rule.module ?: '*')
+                            }
                         }
                     }
                 }
@@ -123,15 +161,20 @@ publishing {
                 // | compileOnly    -> pom provided |
                 // | runtimeOnly    -> pom runtime  |
                 // +--------------------------------+
-                configurations.compile.getAllDependencies().each { dep -> addDependency(dep, "compile") }
-                configurations.provided.getAllDependencies().each { dep -> addDependency(dep, "provided") }
-                configurations.api.getAllDependencies().each { dep -> addDependency(dep, "compile") }
-                configurations.implementation.getAllDependencies().each { dep -> addDependency(dep, "compile") }
-                configurations.compileOnly.getAllDependencies().each { dep -> addDependency(dep, "provided") }
-                configurations.runtimeOnly.getAllDependencies().each { dep -> addDependency(dep, "runtime") }
+                // Duplicated issues:
+                // compile -> compile, api, implementation, archives
+                // api      -> api, implementation, archives
+                // provided -> provided, compileOnly
+                addDependency(configurations.compile, 'compile')
+                addDependency(configurations.provided, 'provided')
+                addDependency(configurations.api, 'compile')
+                addDependency(configurations.implementation, 'compile')
+                addDependency(configurations.compileOnly, 'provided')
+                addDependency(configurations.runtimeOnly, 'runtime')
+                addDependency(configurations.archives, 'archives')
 
                 // 3. Config pom.xml extra info
-                node.children().last() + {
+                asNode().children().last() + {
                     resolveStrategy = Closure.DELEGATE_FIRST
                     name POM_NAME
                     // packaging has been defined within 'artifact bundleRelease' above
@@ -173,7 +216,6 @@ publishing {
         }
     }
 }
-
 
 // ----------
 // Signing
