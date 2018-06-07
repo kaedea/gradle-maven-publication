@@ -93,12 +93,13 @@ publishing {
                 def addDependency = { configuration, scope ->
                     configuration.allDependencies.each { dep ->
                         if (dep.group == null || dep.version == null || dep.name == null || dep.name == "unspecified"
-                                || finished.find { it == "$dep.group:$dep.name" })
+                                || finished.contains(dep))
                             return
-                        finished << "$dep.group:$dep.name"
+                        finished << dep
 
                         // DefaultProjectDependency (local module) should be resolved first,
-                        // or its version with be 'unspecified'
+                        // or its version with be 'unspecified'. Besides we can also get the type
+                        // after resolving
                         def dependencyFiles
                         def extension
                         def error
@@ -108,7 +109,9 @@ publishing {
                             // Maybe 'Resolving configuration xxx directly is not allowed'
                             // Try to resolve with archives configuration any way
                             error = ignored
-                            dependencyFiles = configurations.archives.files(dep)
+                            try {
+                                dependencyFiles = configurations.archives.files(dep)
+                            } catch (exception) {error = exception}
                         }
                         if (dependencyFiles != null && dependencyFiles.size() > 0) {
                             def firstFile = dependencyFiles.first()
@@ -116,6 +119,7 @@ publishing {
                         }
                         def version = dep.version
                         if (version == "unspecified") {
+                            // This is our last chance, retrieve directly from project property
                             version = project.version
                             if (version == "unspecified")
                                 throw new GradleException(
