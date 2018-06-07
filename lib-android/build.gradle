@@ -23,17 +23,19 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    archives 'com.squareup.picasso:picasso:2.71828'
-
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+
+    api 'com.squareup.picasso:picasso:2.71828'
+    implementation project(':lib-java')
 }
 
 // with 'maven'
- apply from: new File(script_dir, '/maven.gradle')
+apply from: new File(script_dir, '/maven.gradle')
 
 // with 'maven-publish'
 // apply from: new File(script_dir, '/maven-publish.gradle')
