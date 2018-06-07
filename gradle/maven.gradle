@@ -73,6 +73,7 @@ if (isAndroidProject()) {
         archives androidSourcesJar
         archives androidJavadocsJar
     }
+
 } else {
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'

@@ -31,11 +31,11 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.1.1'
 
     api 'com.squareup.picasso:picasso:2.71828'
-    implementation project(':lib-java')
+    api project(':lib-java')
 }
 
 // with 'maven'
-apply from: new File(script_dir, '/maven.gradle')
+// apply from: new File(script_dir, '/maven.gradle')
 
 // with 'maven-publish'
-// apply from: new File(script_dir, '/maven-publish.gradle')
+apply from: new File(script_dir, '/maven-publish.gradle')
