@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
+apply plugin: 'java'
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    runtimeOnly 'commons-io:commons-io:2.5'
+    implementation 'org.apache.commons:commons-lang3:3.5'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+// with 'maven'
+apply from: new File(script_dir, '/maven.gradle')

@@ -1,2 +1,6 @@
+// ----------
+// 'app' -> 'lib-android' -> 'lib-java'
+// ----------
 include ':app'
 include ':lib-android'
+include ':lib-java'
