@@ -13,6 +13,11 @@ def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
 }
 
+def isAndroidProject() {
+    def plugins = project.getPlugins()
+    return plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')
+}
+
 def getReleaseRepositoryUrl() {
     return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
             : System.env.RELEASE_REPOSITORY_URL
@@ -32,27 +37,43 @@ def getRepositoryPassword() {
 }
 
 // ----------
-// Config of packaging tasks
+// Config of archive tasks
 // ----------
-task androidSourcesJar(type: Jar) {
-    classifier = 'sources'
-    from android.sourceSets.main.java.source
-}
-
-task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    android.libraryVariants.all { variant ->
-        if (variant.name == 'release') {
-            owner.classpath += variant.javaCompile.classpath
-        }
+if (isAndroidProject()) {
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.source
     }
-    exclude '**/R.html', '**/R.*.html', '**/index.html'
+
+    task androidJavadocs(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        android.libraryVariants.all { variant ->
+            if (variant.name == 'release') {
+                owner.classpath += variant.javaCompile.classpath
+            }
+        }
+        exclude '**/R.html', '**/R.*.html', '**/index.html'
+    }
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        classifier = 'javadoc'
+        from androidJavadocs.destinationDir
+    }
+
+} else {
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
 }
 
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    classifier = 'javadoc'
-    from androidJavadocs.destinationDir
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }
 
 tasks.withType(Javadoc).all {
@@ -61,10 +82,6 @@ tasks.withType(Javadoc).all {
     if (JavaVersion.current().isJava8Compatible()) {
         options.addStringOption('Xdoclint:none', '-quiet')
     }
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
 }
 
 // ----------
@@ -82,10 +99,16 @@ publishing {
             version = VERSION_NAME
 
             // 2. Config archives:
-            // aar, source.jar, javadoc.jar ...
-            artifact bundleRelease
-            artifact androidSourcesJar
-            artifact androidJavadocsJar
+            // source.jar, javadoc.jar ...
+            if (isAndroidProject()) {
+                artifact bundleRelease
+                artifact androidSourcesJar
+                artifact androidJavadocsJar
+
+            } else {
+                artifact sourcesJar
+                artifact javadocJar
+            }
 
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
@@ -111,7 +134,9 @@ publishing {
                             error = ignored
                             try {
                                 dependencyFiles = configurations.archives.files(dep)
-                            } catch (exception) {error = exception}
+                            } catch (exception) {
+                                error = exception
+                            }
                         }
                         if (dependencyFiles != null && dependencyFiles.size() > 0) {
                             def firstFile = dependencyFiles.first()
@@ -152,26 +177,49 @@ publishing {
                 }
                 // 4. Handling transitive dependencies
                 // Gradle dependencies configurations to maven dependencies scope
-                // Add more configurations here:
-                // +--------------------------------+
-                // | compile        -> pom compile  |
-                // | provided       -> pom provided |
-                // | api            -> pom compile  |
-                // | implementation -> pom compile  |
-                // | compileOnly    -> pom provided |
-                // | runtimeOnly    -> pom runtime  |
-                // +--------------------------------+
+                // android:
+                // +---------------------------------------------+
+                // | compile        -> pom compile  (unspecific) |
+                // | provided       -> pom provided (unspecific) |
+                // | api            -> pom compile  (unspecific) |
+                // | implementation -> pom compile  (unspecific) |
+                // | compileOnly    -> pom provided (unspecific) |
+                // | runtimeOnly    -> pom compile  (unspecific) |
+                // | archives       -> pom removed  (unspecific) |
+                // +---------------------------------------------+
                 // Duplicated issues:
                 // compile -> compile, api, implementation, archives
                 // api      -> api, implementation, archives
                 // provided -> provided, compileOnly
-                addDependency(configurations.compile, 'compile')
-                addDependency(configurations.provided, 'provided')
-                addDependency(configurations.api, 'compile')
-                addDependency(configurations.implementation, 'compile')
-                addDependency(configurations.compileOnly, 'provided')
-                addDependency(configurations.runtimeOnly, 'runtime')
-                addDependency(configurations.archives, 'archives')
+                //
+                // java:
+                // +---------------------------------------------+
+                // | compile        -> pom compile  (unspecific) |
+                // | runtime        -> pom runtime  (unspecific) |
+                // | implementation -> pom runtime  (unspecific) |
+                // | compileOnly    -> pom provided (unspecific) |
+                // | runtimeOnly    -> pom runtime  (unspecific) |
+                // | archives       -> pom removed  (unspecific) |
+                // +---------------------------------------------+
+                // Duplicated issues:
+                // compile -> compile, runtime, implementation
+                //
+                // unspecific: has to specify the scope mapping in the following, or will be removed
+                // Add more custom configuration scope mappings here:
+                if (isAndroidProject()) {
+                    addDependency(configurations.compile, 'compile')
+                    addDependency(configurations.provided, 'provided')
+                    addDependency(configurations.api, 'compile')
+                    addDependency(configurations.implementation, 'compile')
+                    addDependency(configurations.compileOnly, 'provided')
+                    addDependency(configurations.runtimeOnly, 'runtime')
+                } else {
+                    addDependency(configurations.compile, 'compile')
+                    addDependency(configurations.runtime, 'runtime')
+                    addDependency(configurations.implementation, 'runtime')
+                    addDependency(configurations.compileOnly, 'provided')
+                    addDependency(configurations.runtimeOnly, 'runtime')
+                }
 
                 // 3. Config pom.xml extra info
                 asNode().children().last() + {
