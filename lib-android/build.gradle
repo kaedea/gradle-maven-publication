@@ -42,4 +42,15 @@ dependencies {
 //apply from: new File(script_dir, '/maven.gradle')
 
 // with 'maven-publish'
-apply from: new File(script_dir, '/maven-publish.gradle')
+// apply from: new File(script_dir, '/maven-publish.gradle')
+
+buildscript {
+    repositories {
+        maven {url uri(rootProject.file('maven'))}
+    }
+    dependencies {
+        classpath 'com.kaedea:publication:0.1.0-SNAPSHOT'
+    }
+}
+
+apply plugin: 'com.kaedea.publication'

@@ -12,3 +12,6 @@ include ':lib-android'
 include ':lib-android-sub'
 include ':lib-java'
 include ':lib-java-sub'
+
+include ':publication'
+project(':publication').projectDir = file('gradle-plugin/publication')
