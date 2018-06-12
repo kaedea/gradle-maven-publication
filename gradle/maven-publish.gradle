@@ -3,7 +3,8 @@
  */
 
 // ----------
-// Maven gradle plugin 'maven-publish'
+// Script that works with official gradle plugin:
+// Gradle's maven plugin 'maven-publish'
 // https://docs.gradle.org/current/userguide/publishing_maven.html
 // ----------
 apply plugin: 'maven-publish'

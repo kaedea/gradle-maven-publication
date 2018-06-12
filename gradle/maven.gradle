@@ -3,7 +3,8 @@
  */
 
 // ----------
-// Maven gradle plugin 'maven'
+// Script that works with official gradle plugin:
+// Gradle's maven plugin 'maven'
 // https://docs.gradle.org/current/userguide/maven_plugin.html
 // ----------
 apply plugin: 'maven'
