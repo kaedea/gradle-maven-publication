@@ -50,7 +50,7 @@ def getRepositoryPassword() {
 }
 
 // ----------
-// Config of artifacts tasks
+// 1. Config of artifacts to package
 // ----------
 apply from: getExternalScript('artifact-tasks.gradle')
 
@@ -78,7 +78,7 @@ if (isAndroidProject()) {
 publishing {
     publications {
         archives(MavenPublication) {
-            // 1. Config artifact ids
+            // 2. Config artifact ids
             groupId GROUP
             artifactId POM_ARTIFACT_ID
             version = VERSION_NAME

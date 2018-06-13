@@ -51,7 +51,7 @@ def getRepositoryPassword() {
 }
 
 // ----------
-// 2. Config of artifacts tasks
+// 1. Config of artifacts to package
 // ----------
 apply from: getExternalScript('artifact-tasks.gradle')
 
@@ -80,7 +80,7 @@ uploadArchives {
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
             pom.project {
 
-                // 1. Config artifact ids
+                // 2. Config artifact ids
                 groupId GROUP
                 artifactId POM_ARTIFACT_ID
                 version VERSION_NAME
