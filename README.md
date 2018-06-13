@@ -32,11 +32,11 @@ Config the project properties like:
 # ----------
 # Maven repository config
 # ----------
-RELEASE_REPOSITORY_URL=
-SNAPSHOT_REPOSITORY_URL=
+RELEASE_REPOSITORY_URL=(here or system env)
+SNAPSHOT_REPOSITORY_URL=(here or system env)
 
-NEXUS_USERNAME=
-NEXUS_PASSWORD=
+NEXUS_USERNAME=(here or system env)
+NEXUS_PASSWORD=(here or system env)
 
 POM_URL=https://github.com/kaedea/publication/
 POM_SCM_URL=https://github.com/kaedea/publication/
@@ -91,4 +91,4 @@ Work in progress
 
 ## License
 
-Licensed under the Apache License, Version 2.0 (the "License").
+The project is [Apache License, Version 2.0](/LICENSE) licensed.
