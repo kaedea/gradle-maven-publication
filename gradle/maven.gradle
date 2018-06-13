@@ -3,7 +3,8 @@
  */
 
 // ----------
-// Maven gradle plugin 'maven'
+// Script that works with official gradle plugin:
+// Gradle's maven plugin 'maven'
 // https://docs.gradle.org/current/userguide/maven_plugin.html
 // ----------
 apply plugin: 'maven'
@@ -147,29 +148,49 @@ uploadArchives {
                 }
 
                 // 4. Handling transitive dependencies
-                // Gradle dependencies configurations to maven dependencies scope:
+                // Gradle dependencies configurations to maven dependencies scope
                 // android:
-                // +---------------------------------------------+
-                // | compile        -> pom compile  (force)      |
-                // | provided       -> pom provided (unspecific) |
-                // | api            -> pom compile  (force)      |
-                // | implementation -> pom compile  (force)      |
-                // | compileOnly    -> pom provided (unspecific) |
-                // | runtimeOnly    -> pom compile  (force)      |
-                // | archives       -> pom removed  (unspecific) |
-                // +---------------------------------------------+
+                // +-----------------------------------------------------------+
+                // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
+                // |-----------------------------------------------------------|
+                // | compile                   -> pom compile          force   |
+                // | provided                  -> pom provided/removed default |
+                // | api                       -> pom compile          force   |
+                // | implementation            -> pom compile          force   |
+                // | compileOnly               -> pom provided/removed default |
+                // | runtimeOnly               -> pom compile          force   |
+                // | archives                  -> pom removed          default |
+                // | androidTestCompile        -> pom test/removed     default |
+                // | androidTestApi            -> pom test/removed     default |
+                // | androidTestImplementation -> pom test/removed     default |
+                // | testCompile               -> pom test/removed     default |
+                // | testApi                   -> pom test/removed     default |
+                // | testImplementation        -> pom test/removed     default |
+                // | androidTestProvided       -> pom removed          default |
+                // | androidTestCompileOnly    -> pom removed          default |
+                // | androidTestRuntimeOnly    -> pom removed          default |
+                // | testProvided              -> pom removed          default |
+                // | testCompileOnly           -> pom removed          default |
+                // | testRuntimeOnly           -> pom removed          default |
+                // +-----------------------------------------------------------+
                 // java:
-                // +---------------------------------------------+
-                // | compile        -> pom compile  (default)    |
-                // | runtime        -> pom runtime  (default)    |
-                // | implementation -> pom runtime  (default)    |
-                // | compileOnly    -> pom provided (unspecific) |
-                // | runtimeOnly    -> pom runtime  (unspecific) |
-                // | archives       -> pom removed  (unspecific) |
-                // +---------------------------------------------+
-                // force: android plugin force converts the scope mapping, we can do no more
-                // default: java plugin default converts the scope mapping, can be modified
-                // unspecific: has to specify the scope mapping in the following, or will be removed
+                // +-----------------------------------------------------------+
+                // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
+                // |-----------------------------------------------------------|
+                // | compile                   -> pom compile          default |
+                // | runtime                   -> pom runtime          default |
+                // | implementation            -> pom compile/runtime  default |
+                // | compileOnly               -> pom provided/removed default |
+                // | runtimeOnly               -> pom runtime/removed  default |
+                // | archives                  -> pom removed          default |
+                // | testCompile               -> pom test             default |
+                // | testImplementation        -> pom test             default |
+                // | testRuntime               -> pom test             default |
+                // | testCompileOnly           -> pom removed          default |
+                // | testRuntimeOnly           -> pom removed          default |
+                // +-----------------------------------------------------------+
+                // force: plugin force converts the scope mapping, we can do no more
+                // default: plugin default converts the scope mapping, can be modified as following
                 def scopeMappings = pom.scopeMappings
                 def addDependency = { configuration, scope ->
                     if (configuration != null) scopeMappings.addMapping(1, configuration, scope)
@@ -177,7 +198,14 @@ uploadArchives {
                 if (isAndroidProject()) {
                     addDependency(configurations.provided, 'provided')
                     addDependency(configurations.compileOnly, 'provided')
+                    addDependency(configurations.androidTestCompile, 'test')
+                    addDependency(configurations.androidTestApi, 'test')
+                    addDependency(configurations.androidTestImplementation, 'test')
+                    addDependency(configurations.testCompile, 'test')
+                    addDependency(configurations.testApi, 'test')
+                    addDependency(configurations.testImplementation, 'test')
                 } else {
+                    addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
                     addDependency(configurations.runtimeOnly, 'runtime')
                 }
