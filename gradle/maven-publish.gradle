@@ -183,34 +183,50 @@ publishing {
                 // 4. Handling transitive dependencies
                 // Gradle dependencies configurations to maven dependencies scope
                 // android:
-                // +---------------------------------------------+
-                // | compile        -> pom compile  (unspecific) |
-                // | provided       -> pom provided (unspecific) |
-                // | api            -> pom compile  (unspecific) |
-                // | implementation -> pom compile  (unspecific) |
-                // | compileOnly    -> pom provided (unspecific) |
-                // | runtimeOnly    -> pom compile  (unspecific) |
-                // | archives       -> pom removed  (unspecific) |
-                // +---------------------------------------------+
+                // +-----------------------------------------------------------+
+                // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
+                // |-----------------------------------------------------------|
+                // | compile                   -> pom compile/removed  default |
+                // | provided                  -> pom provided/removed default |
+                // | api                       -> pom compile/removed  default |
+                // | implementation            -> pom compile/removed  default |
+                // | compileOnly               -> pom provided/removed default |
+                // | runtimeOnly               -> pom runtime/removed  default |
+                // | archives                  -> pom removed          default |
+                // | androidTestImplementation -> pom test/removed     default |
+                // | testCompile               -> pom test/removed     default |
+                // | testApi                   -> pom test/removed     default |
+                // | testImplementation        -> pom test/removed     default |
+                // | testProvided              -> pom removed          default |
+                // | testCompileOnly           -> pom removed          default |
+                // | testRuntimeOnly           -> pom removed          default |
+                // +-----------------------------------------------------------+
                 // Duplicated issues:
                 // compile -> compile, api, implementation, archives
                 // api      -> api, implementation, archives
                 // provided -> provided, compileOnly
                 //
                 // java:
-                // +---------------------------------------------+
-                // | compile        -> pom compile  (unspecific) |
-                // | runtime        -> pom runtime  (unspecific) |
-                // | implementation -> pom runtime  (unspecific) |
-                // | compileOnly    -> pom provided (unspecific) |
-                // | runtimeOnly    -> pom runtime  (unspecific) |
-                // | archives       -> pom removed  (unspecific) |
-                // +---------------------------------------------+
+                // +-----------------------------------------------------------+
+                // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
+                // |-----------------------------------------------------------|
+                // | compile                   -> pom compile/removed  default |
+                // | runtime                   -> pom runtime/removed  default |
+                // | implementation            -> pom compile/removed  default |
+                // | compileOnly               -> pom provided/removed default |
+                // | runtimeOnly               -> pom runtime/removed  default |
+                // | archives                  -> pom removed          default |
+                // | testCompile               -> pom test/removed     default |
+                // | testImplementation        -> pom test/removed     default |
+                // | testRuntime               -> pom test/removed     default |
+                // | testCompileOnly           -> pom removed          default |
+                // | testRuntimeOnly           -> pom removed          default |
+                // +-----------------------------------------------------------+
                 // Duplicated issues:
                 // compile -> compile, runtime, implementation
                 //
-                // unspecific: has to specify the scope mapping in the following, or will be removed
-                // Add more custom configuration scope mappings here:
+                // force: plugin force converts the scope mapping, we can do no more
+                // default: plugin default converts the scope mapping, can be modified as following
                 if (isAndroidProject()) {
                     addDependency(configurations.compile, 'compile')
                     addDependency(configurations.provided, 'provided')
@@ -218,12 +234,19 @@ publishing {
                     addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
                     addDependency(configurations.runtimeOnly, 'runtime')
+                    addDependency(configurations.androidTestImplementation, 'test')
+                    addDependency(configurations.testCompile, 'test')
+                    addDependency(configurations.testApi, 'test')
+                    addDependency(configurations.testImplementation, 'test')
                 } else {
                     addDependency(configurations.compile, 'compile')
                     addDependency(configurations.runtime, 'runtime')
-                    addDependency(configurations.implementation, 'runtime')
+                    addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
                     addDependency(configurations.runtimeOnly, 'runtime')
+                    addDependency(configurations.testCompile, 'test')
+                    addDependency(configurations.testImplementation, 'test')
+                    addDependency(configurations.testRuntime, 'test')
                 }
 
                 // 3. Config pom.xml extra info
