@@ -193,10 +193,15 @@ publishing {
                 // | compileOnly               -> pom provided/removed default |
                 // | runtimeOnly               -> pom runtime/removed  default |
                 // | archives                  -> pom removed          default |
+                // | androidTestCompile        -> pom test/removed     default |
+                // | androidTestApi            -> pom test/removed     default |
                 // | androidTestImplementation -> pom test/removed     default |
                 // | testCompile               -> pom test/removed     default |
                 // | testApi                   -> pom test/removed     default |
                 // | testImplementation        -> pom test/removed     default |
+                // | androidTestProvided       -> pom removed          default |
+                // | androidTestCompileOnly    -> pom removed          default |
+                // | androidTestRuntimeOnly    -> pom removed          default |
                 // | testProvided              -> pom removed          default |
                 // | testCompileOnly           -> pom removed          default |
                 // | testRuntimeOnly           -> pom removed          default |
@@ -234,6 +239,8 @@ publishing {
                     addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
                     addDependency(configurations.runtimeOnly, 'runtime')
+                    addDependency(configurations.androidTestCompile, 'test')
+                    addDependency(configurations.androidTestApi, 'test')
                     addDependency(configurations.androidTestImplementation, 'test')
                     addDependency(configurations.testCompile, 'test')
                     addDependency(configurations.testApi, 'test')

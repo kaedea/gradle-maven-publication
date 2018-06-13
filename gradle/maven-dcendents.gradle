@@ -125,20 +125,29 @@ afterEvaluate {
                     }
 
                     // 4. Handling transitive dependencies
-                    // Gradle dependencies configurations to maven dependencies scope
-                    // android:
+                    // Gradle dependencies configurations to maven dependencies scope:
                     // +-----------------------------------------------------------+
                     // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
                     // |-----------------------------------------------------------|
                     // | compile                   -> pom compile          default |
                     // | provided                  -> pom provided/removed default |
                     // | api                       -> pom compile          default |
-                    // | implementation            -> pom runtime          default |
+                    // | implementation            -> pom compile/runtime  default |
                     // | compileOnly               -> pom provided/removed default |
-                    // | runtimeOnly               -> pom removed          default |
+                    // | runtimeOnly               -> pom compile          default |
                     // | archives                  -> pom removed          default |
+                    // | androidTestCompile        -> pom test/removed     default |
+                    // | androidTestApi            -> pom test/removed     default |
+                    // | androidTestImplementation -> pom test/removed     default |
+                    // | testCompile               -> pom test             default |
+                    // | testApi                   -> pom test/removed     default |
                     // | testImplementation        -> pom test             default |
-                    // | androidTestImplementation -> pom removed          default |
+                    // | androidTestProvided       -> pom removed          default |
+                    // | androidTestCompileOnly    -> pom removed          default |
+                    // | androidTestRuntimeOnly    -> pom removed          default |
+                    // | testProvided              -> pom removed          default |
+                    // | testCompileOnly           -> pom removed          default |
+                    // | testRuntimeOnly           -> pom removed          default |
                     // +-----------------------------------------------------------+
                     // default: plugin default converts the scope mapping, can be modified as following
                     def scopeMappings = pom.scopeMappings
@@ -146,7 +155,12 @@ afterEvaluate {
                         if (configuration != null) scopeMappings.addMapping(1, configuration, scope)
                     }
                     addDependency(configurations.provided, 'provided')
+                    addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
+                    addDependency(configurations.androidTestCompile, 'test')
+                    addDependency(configurations.androidTestApi, 'test')
+                    addDependency(configurations.androidTestImplementation, 'test')
+                    addDependency(configurations.testApi, 'test')
                 }
 
                 // 5. Config maven repository
