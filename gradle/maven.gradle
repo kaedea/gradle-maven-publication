@@ -25,9 +25,8 @@ def isAndroidProject() {
 }
 
 def getExternalScript = {
-    if (findProperty('script_dir')) {
-        def file = new File(script_dir, it)
-        if (file.exists()) return file
+    if (rootProject.file("gradle/$it").exists()) {
+        return rootProject.file("gradle/$it")
     }
     return "http://kaedea.github.com/publication/gradle/$it"
 }

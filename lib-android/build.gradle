@@ -38,10 +38,10 @@ dependencies {
 }
 
 // with 'maven'
-apply from: new File(script_dir, '/maven.gradle')
+apply from: rootProject.file('gradle/maven.gradle')
 
 // with 'maven-publish'
-// apply from: new File(script_dir, '/maven-publish.gradle')
+// apply from: rootProject.file('gradle/maven-publish.gradle')
 
 // with 'android-maven'
 // For non-builtin plugin, we should add classpath within 'build.gradle'
@@ -49,4 +49,4 @@ apply from: new File(script_dir, '/maven.gradle')
 //     repositories { mavenCentral() }
 //     dependencies { classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1' }
 // }
-// apply from: new File(script_dir, '/maven-dcendents.gradle')
+// apply from: rootProject.file('gradle/maven-dcendents.gradle')
