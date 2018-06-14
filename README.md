@@ -85,6 +85,33 @@ gradle :publishToMavenLocal
 gradle :publish
 ```
 
+### Upload to Bintray
+Config the project properties like:
+```shell
+# ----------
+# Bintray auth config
+# ----------
+BINTRAY_USERNAME=
+BINTRAY_API_KEY=
+
+# ----------
+# Maven repo config
+# ----------
+BINTRAY_REPO=maven
+BINTRAY_NAME=publication-android
+```
+
+Apply the script in your project's build.gradle as [above](#Script), then apply the bintray script:
+```groovy
+apply from: 'http://kaedea.github.com/publication/gradle/bintray.gradle'
+
+```
+
+Run the following tasks to publish to Bintray:
+```bash
+gradle :bintrayUpload
+```
+
 ### Plugin
 
 Work in progress

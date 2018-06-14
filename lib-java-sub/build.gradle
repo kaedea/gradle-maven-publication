@@ -14,8 +14,16 @@ dependencies {
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
-// with 'maven'
-apply from: new File(script_dir, '/maven.gradle')
+// ------------------------------------------------------------------------------------------------+
+// PUBLISH                                                                                         |
+// ------------------------------------------------------------------------------------------------+
 
+// ----------
+// with 'maven'
+// ----------
+apply from: rootProject.file('gradle/maven.gradle')
+
+// ----------
 // with 'maven-publish'
-// apply from: new File(script_dir, '/maven-publish.gradle')
+// ----------
+// apply from: rootProject.file('gradle/maven-publish.gradle')

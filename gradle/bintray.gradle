@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2018. Kaede<kidhaibara@gmail.com>
+ */
+
+// ----------
+// Script that works with 3rd-party gradle plugin:
+// JFrog's gradle plugin 'bintray'
+// https://github.com/bintray/gradle-bintray-plugin
+// ----------
+apply plugin: 'com.jfrog.bintray'
+
+def isAndroidProject() {
+    def plugins = project.getPlugins()
+    return plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')
+}
+
+def getBintrayUsername() {
+    return properties.get('BINTRAY_USERNAME', System.getenv('BINTRAY_USERNAME'))
+}
+
+def getBintrayApiKey() {
+    return properties.get('BINTRAY_API_KEY', System.getenv('BINTRAY_API_KEY'))
+}
+
+def getBintrayRepo() {
+    return properties.get('BINTRAY_REPO', System.getenv('BINTRAY_REPO')) ?: 'repo'
+}
+
+def getBintrayName() {
+    return properties.get('BINTRAY_NAME', System.getenv('BINTRAY_NAME')) ?: project.name
+}
+
+def getBintrayIssueTrackerUrl() {
+    if (POM_URL) {
+        def url = POM_URL
+        if (url.startsWith("https://github.com") || url.startsWith("http://github.com")) {
+            if (!url.endsWith("/")) url += "/"
+            return url + "issues"
+        }
+    }
+    return POM_URL
+}
+
+def getBintrayVcsUrl() {
+    if (POM_URL) {
+        def url = POM_URL
+        if (url.startsWith("https://github.com") || url.startsWith("http://github.com")) {
+            if (url.endsWith("/")) url = url.substring(0, url.length() - 2)
+            return url + ".git"
+        }
+    }
+    return POM_URL
+}
+
+// ----------
+// Configuration of 'bintray'
+// Run ':bintrayUpload' to publish the artifact to Bintray
+// ----------
+afterEvaluate {
+    bintray {
+        user = getBintrayUsername()
+        key = getBintrayApiKey()
+        configurations = ['archives']
+
+        pkg {
+            repo = getBintrayRepo()
+            name = getBintrayName()
+            desc = POM_DESCRIPTION
+            websiteUrl = POM_URL
+            issueTrackerUrl = getBintrayIssueTrackerUrl()
+            vcsUrl = getBintrayVcsUrl()
+            licenses = [POM_LICENCE_NAME]
+            labels = isAndroidProject() ? ['aar', 'android'] : ['jar', 'java']
+            publicDownloadNumbers = true
+        }
+    }
+}
