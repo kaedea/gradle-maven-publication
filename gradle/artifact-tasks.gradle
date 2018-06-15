@@ -8,7 +8,7 @@ def isAndroidProject() {
 }
 
 // ----------
-// Config of artifact tasks:
+// Common config of artifact tasks:
 // Config archives: sources.jar, javadoc.jar, etc.
 // ----------
 if (isAndroidProject()) {

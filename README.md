@@ -27,6 +27,10 @@ Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven
 
 ### Script
 
+1. Config the properties required by the script.
+2. Apply the script file on demand in 'build.gradle'.
+3. Run the script tasks to publish artifacts to local/remote repository.
+
 Config the project properties like:
 ```shell
 # ----------
@@ -86,6 +90,9 @@ gradle :publish
 ```
 
 ### Upload to Bintray
+
+Apply the bintray script to upload the artifacts to Bintray/JCenter (additional).
+
 Config the project properties like:
 ```shell
 # ----------
@@ -101,10 +108,9 @@ BINTRAY_REPO=maven
 BINTRAY_NAME=publication-android
 ```
 
-Apply the script in your project's build.gradle as [above](#Script), then apply the bintray script:
+Apply the script in your project's build.gradle as [Script](#Script) above, then apply the bintray script:
 ```groovy
 apply from: 'http://kaedea.github.com/publication/gradle/bintray.gradle'
-
 ```
 
 Run the following tasks to publish to Bintray:
@@ -115,6 +121,14 @@ gradle :bintrayUpload
 ### Plugin
 
 Work in progress
+
+## References
+
+1. [https://docs.gradle.org/current/userguide/maven_plugin.html](https://docs.gradle.org/current/userguide/maven_plugin.html)
+1. [https://docs.gradle.org/current/userguide/publishing_maven.html](https://docs.gradle.org/current/userguide/publishing_maven.html)
+1. [https://github.com/square/picasso/blob/master/gradle/gradle-mvn-push.gradle](https://github.com/square/picasso/blob/master/gradle/gradle-mvn-push.gradle)
+1. [https://github.com/dcendents/android-maven-gradle-plugin](https://github.com/dcendents/android-maven-gradle-plugin)
+1. [https://stackoverflow.com/questions/26874498/maven-publish-android-library-with-aar-and-source-jar](https://stackoverflow.com/questions/26874498/maven-publish-android-library-with-aar-and-source-jar)
 
 ## License
 
