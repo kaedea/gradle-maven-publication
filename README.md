@@ -2,25 +2,24 @@
 
 Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven` or `maven-publish` plugin.
 
-
 ## Project Structure
 
-|  Demo projects |  Description |
-| :------------ | :------------ |
-| app | Demo app module |
-| lib-android | Demo android library module |
+| Demo projects   | Description                   |
+| :-------------- | :---------------------------- |
+| app             | Demo app module               |
+| lib-android     | Demo android library module   |
 | lib-android-sub | Demo android library module 2 |
-| lib-java | Demo java library module |
-| lib-java-sub | Demo java library module  2 |
+| lib-java        | Demo java library module      |
+| lib-java-sub    | Demo java library module  2   |
 
-|  Script |  Description |
-| :------------ | :------------ |
-| gradle/maven.gradle | Workaround script with gradle plugin 'maven' |
+| Script                        | Description                                                    |
+| :---------------------------- | :------------------------------------------------------------- |
+| gradle/maven.gradle           | Workaround script with gradle plugin 'maven'                   |
 | gradle/maven-dcendents.gradle | Workaround script with 3rd-party gradle plugin 'android-maven' |
-| gradle/maven-publish.gradle | Workaround script with gradle plugin 'maven-publish' |
+| gradle/maven-publish.gradle   | Workaround script with gradle plugin 'maven-publish'           |
 
-|  Plugin |  Description |
-| :------------ | :------------ |
+| Plugin                    | Description                                                        |
+| :------------------------ | :----------------------------------------------------------------- |
 | gradle-plugin/publication | Custom gradle plugin that helps to publish jar/aar artifacts (WIP) |
 
 ## Getting Started
@@ -32,6 +31,7 @@ Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven
 3. Run the script tasks to publish artifacts to local/remote repository.
 
 Config the project properties like:
+
 ```shell
 # ----------
 # Maven repository config
@@ -67,6 +67,7 @@ POM_DESCRIPTION=Demo android library of project Publications
 ```
 
 Apply the script in your project's build.gradle:
+
 ```groovy
 // For leagcy 'maven' plugin:
 apply from: 'http://kaedea.github.com/publication/gradle/maven.gradle'
@@ -79,6 +80,7 @@ apply from: 'http://kaedea.github.com/publication/gradle/maven-publish.gradle'
 ```
 
 At last, run the following tasks to publish:
+
 ```bash
 # For leagcy 'maven' or dcendents's 'android-maven' plugin:
 gradle :uploadArchives
@@ -94,6 +96,7 @@ gradle :publish
 Apply the bintray script to upload the artifacts to Bintray/JCenter (additional).
 
 Config the project properties like:
+
 ```shell
 # ----------
 # Bintray auth config
@@ -109,11 +112,13 @@ BINTRAY_NAME=publication-android
 ```
 
 Apply the script in your project's build.gradle as [Script](#Script) above, then apply the bintray script:
+
 ```groovy
 apply from: 'http://kaedea.github.com/publication/gradle/bintray.gradle'
 ```
 
 Run the following tasks to publish to Bintray:
+
 ```bash
 gradle :bintrayUpload
 ```
