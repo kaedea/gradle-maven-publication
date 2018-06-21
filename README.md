@@ -1,5 +1,7 @@
 # Publications
 
+![Banner](doc/banner.png)
+
 Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven` or `maven-publish` plugin.
 
 ## Project Structure
