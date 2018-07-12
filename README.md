@@ -1,4 +1,4 @@
-# Publications
+# Gradle Maven Publication
 
 ![Banner](doc/banner.png)
 
@@ -6,7 +6,7 @@ Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven
 
 This repository contains two components: scripts and plugin.
 
-The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but suport with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. The plugin is going to be a custom gradle plugin which make the workflow much simplier.
+The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but suport with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. The plugin is going to be a custom gradle plugin which makes the workflow much simplier.
 
 ## Project Structure
 
@@ -51,10 +51,10 @@ SNAPSHOT_REPOSITORY_URL=(required here or system env)
 NEXUS_USERNAME=(required here or system env)
 NEXUS_PASSWORD=(required here or system env)
 
-POM_URL=https://github.com/kaedea/publication/
-POM_SCM_URL=https://github.com/kaedea/publication/
-POM_SCM_CONNECTION=scm:git:git://github.com/kaedea/publication.git
-POM_SCM_DEV_CONNECTION=scm:git:ssh://git@github.com:kaedea/publication.git
+POM_URL=https://github.com/kaedea/gradle-maven-publication/
+POM_SCM_URL=https://github.com/kaedea/gradle-maven-publication/
+POM_SCM_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git
+POM_SCM_DEV_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git
 
 POM_LICENCE_NAME=The Apache Software License, Version 2.0
 POM_LICENCE_URL=http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -84,13 +84,13 @@ Apply the script in your project's build.gradle:
 // 2. apply from scirpt file from 'project/gradle/..'
 
 // For leagcy 'maven' plugin:
-apply from: 'http://kaedea.github.com/publication/gradle/maven.gradle'
+apply from: 'http://kaedea.github.com/gradle-maven-publication/gradle/maven.gradle'
 
 // For dcendents's 'android-maven' plugin:
-apply from: 'http://kaedea.github.com/publication/gradle/maven-dcendents.gradle'
+apply from: 'http://kaedea.github.com/gradle-maven-publication/gradle/maven-dcendents.gradle'
 
 // For new 'maven-publish' plugin:
-apply from: 'http://kaedea.github.com/publication/gradle/maven-publish.gradle'
+apply from: 'http://kaedea.github.com/gradle-maven-publication/gradle/maven-publish.gradle'
 ```
 
 At last, run the following tasks to publish:
@@ -128,7 +128,7 @@ BINTRAY_NAME=publication-android
 Apply the script in your project's build.gradle as [Script](#Script) above, then apply the bintray script:
 
 ```groovy
-apply from: 'http://kaedea.github.com/publication/gradle/bintray.gradle'
+apply from: 'http://kaedea.github.com/gradle-maven-publication/gradle/bintray.gradle'
 ```
 
 Run the following tasks to publish to Bintray:
