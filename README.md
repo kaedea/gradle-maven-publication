@@ -4,6 +4,10 @@
 
 Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven` or `maven-publish` plugin.
 
+This repository contains two components: scripts and plugin.
+
+The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but suport with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. The plugin is going to be a custom gradle plugin which make the workflow much simplier.
+
 ## Project Structure
 
 | Demo projects   | Description                   |
@@ -35,14 +39,17 @@ Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven
 Config the project properties like:
 
 ```shell
+# required: must be configurated
+# required here or system env: must be configurated in project properties or system environment
+
 # ----------
 # Maven repository config
 # ----------
-RELEASE_REPOSITORY_URL=(here or system env)
-SNAPSHOT_REPOSITORY_URL=(here or system env)
+RELEASE_REPOSITORY_URL=(required here or system env)
+SNAPSHOT_REPOSITORY_URL=(required here or system env)
 
-NEXUS_USERNAME=(here or system env)
-NEXUS_PASSWORD=(here or system env)
+NEXUS_USERNAME=(required here or system env)
+NEXUS_PASSWORD=(required here or system env)
 
 POM_URL=https://github.com/kaedea/publication/
 POM_SCM_URL=https://github.com/kaedea/publication/
@@ -59,18 +66,23 @@ POM_DEVELOPER_NAME=Kaede Akatsuki
 # ----------
 # Maven artifact config
 # ----------
-GROUP=com.kaedea
-VERSION_NAME=0.1.0-SNAPSHOT
+GROUP=com.kaedea (required)
+VERSION_NAME=0.1.0-SNAPSHOT (required)
+VERSION_CODE=10
 
 POM_NAME=Publication Android Library
 POM_ARTIFACT_ID=publication-android-library
-POM_PACKAGING=aar
+POM_PACKAGING=jar|aar
 POM_DESCRIPTION=Demo android library of project Publications
 ```
 
 Apply the script in your project's build.gradle:
 
 ```groovy
+// We have 2 ways to apply the script:
+// 1. apply from remote url
+// 2. apply from scirpt file from 'project/gradle/..'
+
 // For leagcy 'maven' plugin:
 apply from: 'http://kaedea.github.com/publication/gradle/maven.gradle'
 
@@ -103,8 +115,8 @@ Config the project properties like:
 # ----------
 # Bintray auth config
 # ----------
-BINTRAY_USERNAME=
-BINTRAY_API_KEY=
+BINTRAY_USERNAME=(required here or system env)
+BINTRAY_API_KEY=(required here or system env)
 
 # ----------
 # Maven repo config
