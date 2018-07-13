@@ -35,23 +35,11 @@ targetCompatibility = JavaVersion.VERSION_1_7
 // ----------
 buildscript {
     repositories {
-        jcenter()
+         maven { url rootProject.file('maven') }
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+        classpath 'com.kaedea:publication:0.1.0-SNAPSHOT'
     }
 }
 
-apply plugin: 'com.bmuschko.nexus'
-
-extraArchive {
-    sources = false
-    tests = true
-    javadoc = false
-}
-
-nexus {
-    sign = false
-    repositoryUrl = uri(rootProject.file('maven'))
-    snapshotRepositoryUrl = uri(rootProject.file('maven'))
-}
+apply plugin: 'com.kaedea.publication'
