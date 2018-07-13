@@ -21,9 +21,37 @@ targetCompatibility = JavaVersion.VERSION_1_7
 // ----------
 // with 'maven'
 // ----------
-apply from: rootProject.file('gradle/maven.gradle')
+// apply from: rootProject.file('gradle/maven.gradle')
 
 // ----------
 // with 'maven-publish'
 // ----------
 // apply from: rootProject.file('gradle/maven-publish.gradle')
+
+// ----------
+// with custom 'nexus'
+// @link "https://github.com/bmuschko/gradle-nexus-plugin"
+// For non-builtin plugin, we should add classpath within 'build.gradle'
+// ----------
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+    }
+}
+
+apply plugin: 'com.bmuschko.nexus'
+
+extraArchive {
+    sources = false
+    tests = true
+    javadoc = false
+}
+
+nexus {
+    sign = false
+    repositoryUrl = uri(rootProject.file('maven'))
+    snapshotRepositoryUrl = uri(rootProject.file('maven'))
+}

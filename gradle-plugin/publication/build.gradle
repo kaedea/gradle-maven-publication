@@ -16,4 +16,7 @@ dependencies {
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-apply from: new File(script_dir, '/maven.gradle')
+// ----------
+// with 'maven'
+// ----------
+apply from: rootProject.file('gradle/maven.gradle')
