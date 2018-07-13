@@ -8,7 +8,6 @@ buildscript {
     ext {
         kotlin_version = '1.2.30'
         is_jitpack = 'true' == System.env.JITPACK
-        script_dir = rootProject.file('gradle')
     }
     repositories {
         jcenter()

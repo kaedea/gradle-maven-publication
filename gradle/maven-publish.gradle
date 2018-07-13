@@ -3,7 +3,8 @@
  */
 
 // ----------
-// Maven gradle plugin 'maven-publish'
+// Script that works with official gradle plugin:
+// Gradle's maven plugin 'maven-publish'
 // https://docs.gradle.org/current/userguide/publishing_maven.html
 // ----------
 apply plugin: 'maven-publish'
@@ -20,6 +21,13 @@ def isReleaseBuild() {
 def isAndroidProject() {
     def plugins = project.getPlugins()
     return plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')
+}
+
+def getExternalScript = {
+    if (rootProject.file("gradle/$it").exists()) {
+        return rootProject.file("gradle/$it")
+    }
+    return "http://kaedea.github.com/publication/gradle/$it"
 }
 
 def getReleaseRepositoryUrl() {
@@ -41,50 +49,22 @@ def getRepositoryPassword() {
 }
 
 // ----------
-// Config of archive tasks
+// 1. Config of artifacts to package
 // ----------
+apply from: getExternalScript('artifact-tasks.gradle')
+
 if (isAndroidProject()) {
-    task androidSourcesJar(type: Jar) {
-        classifier = 'sources'
-        from android.sourceSets.main.java.source
+    artifacts {
+        archives androidJavadocJar
+        archives androidSourcesJar
     }
-
-    task androidJavadocs(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-        android.libraryVariants.all { variant ->
-            if (variant.name == 'release') {
-                owner.classpath += variant.javaCompile.classpath
-            }
-        }
-        exclude '**/R.html', '**/R.*.html', '**/index.html'
-    }
-    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-        classifier = 'javadoc'
-        from androidJavadocs.destinationDir
-    }
-
+    // or
+    // artifacts.add('archives', androidJavadocJar)
+    // artifacts.add('archives', androidSourcesJar)
 } else {
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
-
-tasks.withType(Javadoc).all {
-    options.encoding = "UTF-8"
-    options.addStringOption('encoding', 'UTF-8')
-    if (JavaVersion.current().isJava8Compatible()) {
-        options.addStringOption('Xdoclint:none', '-quiet')
+    artifacts {
+        archives javadocJar
+        archives sourcesJar
     }
 }
 
@@ -97,21 +77,13 @@ tasks.withType(Javadoc).all {
 publishing {
     publications {
         archives(MavenPublication) {
-            // 1. Config artifact ids
+            // 2. Config artifact ids
             groupId GROUP
             artifactId POM_ARTIFACT_ID
             version = VERSION_NAME
 
-            // 2. Config archives:
-            // source.jar, javadoc.jar ...
             if (isAndroidProject()) {
                 artifact bundleRelease
-                artifact androidSourcesJar
-                artifact androidJavadocsJar
-
-            } else {
-                artifact sourcesJar
-                artifact javadocJar
             }
 
             pom.withXml {
@@ -182,34 +154,55 @@ publishing {
                 // 4. Handling transitive dependencies
                 // Gradle dependencies configurations to maven dependencies scope
                 // android:
-                // +---------------------------------------------+
-                // | compile        -> pom compile  (unspecific) |
-                // | provided       -> pom provided (unspecific) |
-                // | api            -> pom compile  (unspecific) |
-                // | implementation -> pom compile  (unspecific) |
-                // | compileOnly    -> pom provided (unspecific) |
-                // | runtimeOnly    -> pom compile  (unspecific) |
-                // | archives       -> pom removed  (unspecific) |
-                // +---------------------------------------------+
+                // +-----------------------------------------------------------+
+                // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
+                // |-----------------------------------------------------------|
+                // | compile                   -> pom compile/removed  default |
+                // | provided                  -> pom provided/removed default |
+                // | api                       -> pom compile/removed  default |
+                // | implementation            -> pom compile/removed  default |
+                // | compileOnly               -> pom provided/removed default |
+                // | runtimeOnly               -> pom runtime/removed  default |
+                // | archives                  -> pom removed          default |
+                // | androidTestCompile        -> pom test/removed     default |
+                // | androidTestApi            -> pom test/removed     default |
+                // | androidTestImplementation -> pom test/removed     default |
+                // | testCompile               -> pom test/removed     default |
+                // | testApi                   -> pom test/removed     default |
+                // | testImplementation        -> pom test/removed     default |
+                // | androidTestProvided       -> pom removed          default |
+                // | androidTestCompileOnly    -> pom removed          default |
+                // | androidTestRuntimeOnly    -> pom removed          default |
+                // | testProvided              -> pom removed          default |
+                // | testCompileOnly           -> pom removed          default |
+                // | testRuntimeOnly           -> pom removed          default |
+                // +-----------------------------------------------------------+
                 // Duplicated issues:
                 // compile -> compile, api, implementation, archives
                 // api      -> api, implementation, archives
                 // provided -> provided, compileOnly
                 //
                 // java:
-                // +---------------------------------------------+
-                // | compile        -> pom compile  (unspecific) |
-                // | runtime        -> pom runtime  (unspecific) |
-                // | implementation -> pom runtime  (unspecific) |
-                // | compileOnly    -> pom provided (unspecific) |
-                // | runtimeOnly    -> pom runtime  (unspecific) |
-                // | archives       -> pom removed  (unspecific) |
-                // +---------------------------------------------+
+                // +-----------------------------------------------------------+
+                // | CONFIGURATION NAME          SCOPE / DEFAULT       DESC    |
+                // |-----------------------------------------------------------|
+                // | compile                   -> pom compile/removed  default |
+                // | runtime                   -> pom runtime/removed  default |
+                // | implementation            -> pom compile/removed  default |
+                // | compileOnly               -> pom provided/removed default |
+                // | runtimeOnly               -> pom runtime/removed  default |
+                // | archives                  -> pom removed          default |
+                // | testCompile               -> pom test/removed     default |
+                // | testImplementation        -> pom test/removed     default |
+                // | testRuntime               -> pom test/removed     default |
+                // | testCompileOnly           -> pom removed          default |
+                // | testRuntimeOnly           -> pom removed          default |
+                // +-----------------------------------------------------------+
                 // Duplicated issues:
                 // compile -> compile, runtime, implementation
                 //
-                // unspecific: has to specify the scope mapping in the following, or will be removed
-                // Add more custom configuration scope mappings here:
+                // force: plugin force converts the scope mapping, we can do no more
+                // default: plugin default converts the scope mapping, can be modified as following
                 if (isAndroidProject()) {
                     addDependency(configurations.compile, 'compile')
                     addDependency(configurations.provided, 'provided')
@@ -217,12 +210,21 @@ publishing {
                     addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
                     addDependency(configurations.runtimeOnly, 'runtime')
+                    addDependency(configurations.androidTestCompile, 'test')
+                    addDependency(configurations.androidTestApi, 'test')
+                    addDependency(configurations.androidTestImplementation, 'test')
+                    addDependency(configurations.testCompile, 'test')
+                    addDependency(configurations.testApi, 'test')
+                    addDependency(configurations.testImplementation, 'test')
                 } else {
                     addDependency(configurations.compile, 'compile')
                     addDependency(configurations.runtime, 'runtime')
-                    addDependency(configurations.implementation, 'runtime')
+                    addDependency(configurations.implementation, 'compile')
                     addDependency(configurations.compileOnly, 'provided')
                     addDependency(configurations.runtimeOnly, 'runtime')
+                    addDependency(configurations.testCompile, 'test')
+                    addDependency(configurations.testImplementation, 'test')
+                    addDependency(configurations.testRuntime, 'test')
                 }
 
                 // 3. Config pom.xml extra info
