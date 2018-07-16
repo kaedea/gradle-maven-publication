@@ -16,7 +16,13 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
 
+/**
+ * Custom gradle plugin that helps to apply the gradle publishing plugin {@link MavenPlugin}.
+ * @see "https://docs.gradle.org/current/userguide/maven_plugin.html"
+ */
 class PublicationPlugin implements Plugin<Project> {
+
+    private Project mProject
 
     @Override
     void apply(Project project) {
@@ -24,27 +30,28 @@ class PublicationPlugin implements Plugin<Project> {
         project.logger.lifecycle "Publication: apply gradle maven publishing tasks..."
         project.logger.lifecycle "----------"
 
+        mProject = project
         project.plugins.apply(MavenPlugin)
         project.group = project.GROUP
         project.version = project.VERSION_NAME
 
-        configureArtifactTasks(project)
-        configureSigning(project)
-        configurePom(project)
-        configureUpload(project)
+        configureArtifactTasks()
+        configureSigning()
+        configurePom()
+        configureUpload()
     }
 
-    private void configureArtifactTasks(Project project) {
-        project.afterEvaluate {
-            project.plugins.withType(JavaPlugin) {
-                configureSourcesJarTask(project)
+    private void configureArtifactTasks() {
+        mProject.afterEvaluate {
+            mProject.plugins.withType(JavaPlugin) {
+                configureSourcesJarTask()
             }
 
-            project.tasks.withType(JavaCompile) {
+            mProject.tasks.withType(JavaCompile) {
                 options.encoding = "UTF-8"
             }
 
-            project.tasks.withType(Javadoc).all {
+            mProject.tasks.withType(Javadoc).all {
                 options.encoding = "UTF-8"
                 options.addStringOption('encoding', 'UTF-8')
                 if (JavaVersion.current().isJava8Compatible()) {
@@ -52,58 +59,58 @@ class PublicationPlugin implements Plugin<Project> {
                 }
             }
 
-            addArtifactTask(project, "sourcesJar")
+            addArtifactTask("sourcesJar")
         }
     }
 
-    private void configureSourcesJarTask(Project project) {
-        project.task('sourcesJar', type: Jar) {
+    private void configureSourcesJarTask() {
+        mProject.task('sourcesJar', type: Jar) {
             classifier = 'sources'
             group = "build"
-            description = 'Assembles a jar archive containing the main sources of this project.'
-            from project.sourceSets.main.allSource
+            description = 'Assembles a jar archive containing the main sources of this mProject.'
+            from mProject.sourceSets.main.allSource
         }
     }
 
-    private void addArtifactTask(Project project, String taskName) {
-        Task task = project.tasks.findByName(taskName)
+    private void addArtifactTask(String taskName) {
+        Task task = mProject.tasks.findByName(taskName)
         if (task) {
-            project.artifacts.add(Dependency.ARCHIVES_CONFIGURATION, task)
+            mProject.artifacts.add(Dependency.ARCHIVES_CONFIGURATION, task)
         }
     }
 
-    private void configureSigning(Project project) {
+    private void configureSigning() {
 
     }
 
-    private void configurePom(Project project) {
+    private void configurePom() {
 
     }
 
-    private void configureUpload(Project project) {
-        project.afterEvaluate {
-            project.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
-                project.gradle.taskGraph.whenReady { TaskExecutionGraph taskGraph ->
-                    if (taskGraph.hasTask(getUploadTaskPath(project))) {
+    private void configureUpload() {
+        mProject.afterEvaluate {
+            mProject.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
+                mProject.gradle.taskGraph.whenReady { TaskExecutionGraph taskGraph ->
+                    if (taskGraph.hasTask(getUploadTaskPath())) {
 
-                        if (!getReleaseRepositoryUrl(project) && !getSnapshotRepositoryUrl(project)) {
+                        if (!getReleaseRepositoryUrl() && !getSnapshotRepositoryUrl()) {
                             // publish to local maven
-                            repository(url: project.uri(project.rootProject.file('maven')))
+                            repository(url: mProject.uri(mProject.rootProject.file('maven')))
                         }
 
-                        if (getReleaseRepositoryUrl(project)) {
-                            repository(url: getReleaseRepositoryUrl(project)) {
+                        if (getReleaseRepositoryUrl()) {
+                            repository(url: getReleaseRepositoryUrl()) {
                                 authentication(
-                                        userName: getRepositoryUsername(project),
-                                        password: getRepositoryPassword(project)
+                                        userName: getRepositoryUsername(),
+                                        password: getRepositoryPassword()
                                 )
                             }
                         }
-                        if (getSnapshotRepositoryUrl(project)) {
-                            snapshotRepository(url: getSnapshotRepositoryUrl(project)) {
+                        if (getSnapshotRepositoryUrl()) {
+                            snapshotRepository(url: getSnapshotRepositoryUrl()) {
                                 authentication(
-                                        userName: getRepositoryUsername(project),
-                                        password: getRepositoryPassword(project)
+                                        userName: getRepositoryUsername(),
+                                        password: getRepositoryPassword()
                                 )
                             }
                         }
@@ -113,25 +120,25 @@ class PublicationPlugin implements Plugin<Project> {
         }
     }
 
-    String getUploadTaskPath(Project project) {
-        project.rootProject == project ? ":uploadArchives" : "$project.path:uploadArchives"
+    String getUploadTaskPath() {
+        mProject.rootProject == mProject ? ":uploadArchives" : "$mProject.path:uploadArchives"
     }
 
-    def getReleaseRepositoryUrl(Project project) {
-        return project.hasProperty('RELEASE_REPOSITORY_URL') ?
-                project.RELEASE_REPOSITORY_URL :
+    def getReleaseRepositoryUrl() {
+        return mProject.hasProperty('RELEASE_REPOSITORY_URL') ?
+                mProject.RELEASE_REPOSITORY_URL :
                 System.env.RELEASE_REPOSITORY_URL
     }
 
-    def getSnapshotRepositoryUrl(Project project) {
-        return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ?
-                project.SNAPSHOT_REPOSITORY_URL :
+    def getSnapshotRepositoryUrl() {
+        return mProject.hasProperty('SNAPSHOT_REPOSITORY_URL') ?
+                mProject.SNAPSHOT_REPOSITORY_URL :
                 System.env.RELEASE_REPOSITORY_URL
     }
 
-    def getRepositoryUsername(Project project) {
-        def var = project.hasProperty('NEXUS_USERNAME') ?
-                project.NEXUS_USERNAME :
+    def getRepositoryUsername() {
+        def var = mProject.hasProperty('NEXUS_USERNAME') ?
+                mProject.NEXUS_USERNAME :
                 System.env.NEXUS_USERNAME
         if (!var) {
             ConsoleHandler consoleHandler = new ConsoleHandler()
@@ -140,9 +147,9 @@ class PublicationPlugin implements Plugin<Project> {
         return var
     }
 
-    def getRepositoryPassword(Project project) {
-        def var = project.hasProperty('NEXUS_PASSWORD') ?
-                project.NEXUS_PASSWORD :
+    def getRepositoryPassword() {
+        def var = mProject.hasProperty('NEXUS_PASSWORD') ?
+                mProject.NEXUS_PASSWORD :
                 System.env.NEXUS_PASSWORD
         if (!var) {
             ConsoleHandler consoleHandler = new ConsoleHandler()
