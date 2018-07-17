@@ -9,13 +9,16 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.maven.MavenDeployment
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.plugins.GroovyPlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.MavenPlugin
+import org.gradle.api.tasks.Upload
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.plugins.signing.SigningPlugin
 
 /**
  * Custom gradle plugin that helps to apply the gradle publishing plugin {@link MavenPlugin}.
@@ -25,6 +28,10 @@ class PublicationPlugin implements Plugin<Project> {
 
     private Project mProject
 
+    def isReleaseBuild() {
+        return mProject.VERSION_NAME.contains("SNAPSHOT") == false
+    }
+
     @Override
     void apply(Project project) {
         project.logger.lifecycle "----------"
@@ -33,13 +40,14 @@ class PublicationPlugin implements Plugin<Project> {
 
         mProject = project
         project.plugins.apply(MavenPlugin)
+        project.plugins.apply(SigningPlugin)
         project.group = project.GROUP
         project.version = project.VERSION_NAME
 
         configureArtifactTasks()
-        configureSigning()
         configurePom()
         configureUpload()
+        configureSigning()
     }
 
     private void configureArtifactTasks() {
@@ -84,8 +92,10 @@ class PublicationPlugin implements Plugin<Project> {
         }
     }
 
-    private def getDocTask( ) {
-        hasGroovyPlugin() ? mProject.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) : mProject.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
+    private def getDocTask() {
+        hasGroovyPlugin() ?
+                mProject.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
+                mProject.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
     }
 
     private boolean hasGroovyPlugin() {
@@ -101,10 +111,6 @@ class PublicationPlugin implements Plugin<Project> {
         if (task) {
             mProject.artifacts.add(Dependency.ARCHIVES_CONFIGURATION, task)
         }
-    }
-
-    private void configureSigning() {
-
     }
 
     private void configurePom() {
@@ -184,8 +190,43 @@ class PublicationPlugin implements Plugin<Project> {
         }
     }
 
-    String getUploadTaskPath() {
+    private void configureSigning() {
+        mProject.afterEvaluate {
+            mProject.gradle.taskGraph.whenReady {
+                mProject.tasks
+                        .withType(Upload)
+                        .matching { it.path == getUploadTaskPath() }
+                        .each {
+                    it.repositories.mavenDeployer() {
+                        beforeDeployment {
+                            MavenDeployment deployment -> mProject.signing.signPom(deployment)
+                        }
+                    }
+                }
+                mProject.tasks
+                        .withType(Upload)
+                        .matching { it.path == getInstallTaskPath() }
+                        .each {
+                    it.repositories.mavenDeployer() {
+                        beforeDeployment {
+                            MavenDeployment deployment -> mProject.signing.signPom(deployment)
+                        }
+                    }
+                }
+            }
+        }
+        mProject.signing {
+            required { isReleaseBuild() && mProject.gradle.taskGraph.hasTask("uploadArchives") }
+            sign mProject.configurations.archives
+        }
+    }
+
+    def getUploadTaskPath() {
         mProject.rootProject == mProject ? ":uploadArchives" : "$mProject.path:uploadArchives"
+    }
+
+    def getInstallTaskPath() {
+        mProject.rootProject == mProject ? ":$MavenPlugin.INSTALL_TASK_NAME" : "$mProject.path:$MavenPlugin.INSTALL_TASK_NAME"
     }
 
     def getReleaseRepositoryUrl() {
