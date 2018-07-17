@@ -108,7 +108,47 @@ class PublicationPlugin implements Plugin<Project> {
     }
 
     private void configurePom() {
+        mProject.afterEvaluate {
+            mProject.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
+                pom.project {
+                    groupId mProject.GROUP
+                    artifactId mProject.POM_ARTIFACT_ID
+                    version mProject.VERSION_NAME
 
+                    name mProject.POM_NAME
+                    packaging mProject.POM_PACKAGING
+                    url mProject.POM_URL
+                    description mProject.POM_DESCRIPTION
+
+                    scm {
+                        url mProject.POM_SCM_URL
+                        connection mProject.POM_SCM_CONNECTION
+                        developerConnection mProject.POM_SCM_DEV_CONNECTION
+                    }
+                    licenses {
+                        license {
+                            name mProject.POM_LICENCE_NAME
+                            url mProject.POM_LICENCE_URL
+                            distribution mProject.POM_LICENCE_DIST
+                        }
+                    }
+                    developers {
+                        developer {
+                            id mProject.POM_DEVELOPER_ID
+                            name mProject.POM_DEVELOPER_NAME
+                        }
+                    }
+                }
+
+                def scopeMappings = pom.scopeMappings
+                def addDependency = { configuration, scope ->
+                    if (configuration != null) scopeMappings.addMapping(1, configuration, scope)
+                }
+                addDependency(mProject.configurations.implementation, 'compile')
+                addDependency(mProject.configurations.compileOnly, 'provided')
+                addDependency(mProject.configurations.runtimeOnly, 'runtime')
+            }
+        }
     }
 
     private void configureUpload() {
