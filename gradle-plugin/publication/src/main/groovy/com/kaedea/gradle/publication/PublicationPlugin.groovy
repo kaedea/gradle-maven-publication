@@ -10,6 +10,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.execution.TaskExecutionGraph
+import org.gradle.api.plugins.GroovyPlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.MavenPlugin
 import org.gradle.api.tasks.bundling.Jar
@@ -45,6 +46,7 @@ class PublicationPlugin implements Plugin<Project> {
         mProject.afterEvaluate {
             mProject.plugins.withType(JavaPlugin) {
                 configureSourcesJarTask()
+                configureJavadocJarTask()
             }
 
             mProject.tasks.withType(JavaCompile) {
@@ -60,6 +62,7 @@ class PublicationPlugin implements Plugin<Project> {
             }
 
             addArtifactTask("sourcesJar")
+            addArtifactTask("javadocJar")
         }
     }
 
@@ -70,6 +73,27 @@ class PublicationPlugin implements Plugin<Project> {
             description = 'Assembles a jar archive containing the main sources of this mProject.'
             from mProject.sourceSets.main.allSource
         }
+    }
+
+    private void configureJavadocJarTask() {
+        mProject.task('javadocJar', type: Jar) {
+            classifier = 'javadoc'
+            group = "build"
+            description = 'Assembles a jar archive containing the generated Javadoc API documentation of this project.'
+            from getDocTask()
+        }
+    }
+
+    private def getDocTask( ) {
+        hasGroovyPlugin() ? mProject.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) : mProject.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
+    }
+
+    private boolean hasGroovyPlugin() {
+        hasPlugin(GroovyPlugin)
+    }
+
+    private boolean hasPlugin(Class<? extends Plugin> pluginClass) {
+        mProject.plugins.hasPlugin(pluginClass)
     }
 
     private void addArtifactTask(String taskName) {
