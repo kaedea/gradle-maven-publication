@@ -88,6 +88,7 @@ class PublicationPlugin implements Plugin<Project> {
 
             if (Utils.isAndroidProject(project)) {
                 addArtifactTask("androidSourcesJar")
+                addArtifactTask("androidJavadoc")
             } else {
                 addArtifactTask("sourcesJar")
                 addArtifactTask("javadocJar")
@@ -103,6 +104,17 @@ class PublicationPlugin implements Plugin<Project> {
                 group = 'build'
                 description = 'Assemble a jar archive containing the main sources.'
                 from project.android.sourceSets.main.java.source
+            }
+            project.android.libraryVariants.all { variant ->
+                def name = variant.name
+                Task "jar${name.capitalize()}"(type: Jar, dependsOn: variant.javaCompile) {
+                    from variant.javaCompile.destinationDir
+                }
+                if (name == 'release') {
+                    def scope = variant.variantData.scope
+                    project.androidSourcesJar.dependsOn scope.javacTask.name
+                    project.androidSourcesJar.from scope.annotationProcessorOutputDir, scope.buildConfigSourceOutputDir
+                }
             }
         } else {
             project.task('sourcesJar', type: Jar) {
@@ -123,6 +135,31 @@ class PublicationPlugin implements Plugin<Project> {
                 from project.plugins.hasPlugin(GroovyPlugin) ?
                         project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
                         project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
+            }
+        } else {
+            project.task('androidJavadoc', type: Javadoc) {
+                classifier = 'javadoc'
+                group = 'build'
+                description = 'Generated Android Javadoc API documentation.'
+                source = android.sourceSets.main.java.source
+                exclude '**/R.html'
+                exclude '**/R.*.html'
+                exclude '**/index.html'
+                exclude '**/pom.xml'
+                exclude '**/proguard_annotations.pro'
+                classpath += files(project.android.bootClasspath.join(File.pathSeparator))
+                project.android.libraryVariants.all { variant ->
+                    if (variant.name == 'release') {
+                        owner.classpath += variant.javaCompile.classpath
+                    }
+                }
+            }
+
+            project.task('androidJavadocJar', type: androidJavadoc) {
+                classifier = 'javadoc'
+                group = 'build'
+                description = 'Assemble a jar archive containing the generated Javadoc API documentation.'
+                from androidJavadoc.destinationDir
             }
         }
     }
