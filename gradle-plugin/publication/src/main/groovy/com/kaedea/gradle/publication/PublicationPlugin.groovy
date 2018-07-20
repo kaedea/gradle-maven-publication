@@ -71,6 +71,7 @@ class PublicationPlugin implements Plugin<Project> {
             project.plugins.withType(JavaPlugin) {
                 configureSourcesJarTask()
                 configureJavadocJarTask()
+                configureTestsJarTask()
             }
 
             project.tasks.withType(JavaCompile) {
@@ -87,13 +88,14 @@ class PublicationPlugin implements Plugin<Project> {
 
             addArtifactTask("sourcesJar")
             addArtifactTask("javadocJar")
+            addArtifactTask("testsJar")
         }
     }
 
     private void configureSourcesJarTask() {
         project.task('sourcesJar', type: Jar) {
             classifier = 'sources'
-            group = "build"
+            group = 'build'
             description = 'Assembles a jar archive containing the main sources of this mProject.'
             from project.sourceSets.main.allSource
         }
@@ -102,11 +104,20 @@ class PublicationPlugin implements Plugin<Project> {
     private void configureJavadocJarTask() {
         project.task('javadocJar', type: Jar) {
             classifier = 'javadoc'
-            group = "build"
+            group = 'build'
             description = 'Assembles a jar archive containing the generated Javadoc API documentation of this project.'
             from project.plugins.hasPlugin(GroovyPlugin) ?
                     project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
                     project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
+        }
+    }
+
+    private void configureTestsJarTask() {
+        project.task('testsJar', type: Jar) {
+            classifier = 'tests'
+            group = 'build'
+            description = 'Assembles a jar archive containing the test sources of this project.'
+            from project.sourceSets.test.output
         }
     }
 

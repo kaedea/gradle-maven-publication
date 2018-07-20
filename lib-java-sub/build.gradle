@@ -29,8 +29,7 @@ targetCompatibility = JavaVersion.VERSION_1_7
 // apply from: rootProject.file('gradle/maven-publish.gradle')
 
 // ----------
-// with custom 'nexus'
-// @link "https://github.com/bmuschko/gradle-nexus-plugin"
+// with custom 'publication'
 // For non-builtin plugin, we should add classpath within 'build.gradle'
 // ----------
 buildscript {
@@ -41,5 +40,4 @@ buildscript {
         classpath 'com.kaedea:publication:0.1.0-SNAPSHOT'
     }
 }
-
 apply plugin: 'com.kaedea.publication'
