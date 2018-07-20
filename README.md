@@ -6,7 +6,9 @@ Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven
 
 This repository contains two components: scripts and plugin.
 
-The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but suport with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. The plugin is going to be a custom gradle plugin which makes the workflow much simplier.
+The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but suport with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. The plugin is going to be a custom gradle plugin which makes the workflow much simpler.
+
+Of course, the scripts/plugin are designed to **work both with java and android project**.
 
 ## Project Structure
 
@@ -68,12 +70,11 @@ POM_DEVELOPER_NAME=Kaede Akatsuki
 # ----------
 GROUP=com.kaedea (required)
 VERSION_NAME=0.1.0-SNAPSHOT (required)
-VERSION_CODE=10
 
-POM_NAME=Publication Android Library
-POM_ARTIFACT_ID=publication-android-library
+POM_NAME=Publication
+POM_ARTIFACT_ID=publication
 POM_PACKAGING=jar|aar
-POM_DESCRIPTION=Demo android library of project Publications
+POM_DESCRIPTION=Gradle plugin that make the publishing
 ```
 
 Apply the script in your project's build.gradle:
@@ -122,7 +123,7 @@ BINTRAY_API_KEY=(required here or system env)
 # Maven repo config
 # ----------
 BINTRAY_REPO=maven
-BINTRAY_NAME=publication-android
+BINTRAY_NAME=publication
 ```
 
 Apply the script in your project's build.gradle as [Script](#Script) above, then apply the bintray script:
@@ -149,6 +150,9 @@ Apply plugin like:
 
 ```groovy
 buildscript {
+    repositories {
+        jcenter()
+    }
     dependencies {
         classpath 'com.kaedea:publication:latest.integration'
     }
@@ -160,39 +164,54 @@ Config the plugin:
 
 ```groovy
 // You can configure the publishing in the following, or gradle.properties, or System.env
+// The configuration is almost the same with scripts above
 // 'optional': be configured or not
 // 'required': must be configured
 // 'required input': be configured, or the console will ask you to input the value
+
 publication {
     jarSources = true // optional
     jarJavaDoc = true // optional
-    jarTests = true // optional
+    jarTests = true   // optional
 
-    GROUP('com.kaedea')
-    VERSION_NAME('0.1.0-SNAPSHOT')
+    GROUP('com.kaedea')            // required
+    VERSION_NAME('0.1.0-SNAPSHOT') // required
 
-    POM_NAME('Publication') // optional
+    POM_NAME('Publication')        // optional
     POM_ARTIFACT_ID('publication') // optional
-    POM_PACKAGING('jar') // optional
-    POM_URL('https://github.com/kaedea/publication/') // optional
+    POM_PACKAGING('jar')           // optional
+    POM_URL('https://github.com/kaedea/publication/')         // optional
     POM_DESCRIPTION('Gradle plugin that make the publishing') // optional
 
-    POM_SCM_URL('https://github.com/kaedea/publication/') // optional
-    POM_SCM_CONNECTION('scm:git:git://github.com/kaedea/publication.git') // optional
+    POM_SCM_URL('https://github.com/kaedea/publication/')                         // optional
+    POM_SCM_CONNECTION('scm:git:git://github.com/kaedea/publication.git')         // optional
     POM_SCM_DEV_CONNECTION('scm:git:ssh://git@github.com:kaedea/publication.git') // optional
 
-    POM_LICENCE_NAME('The Apache Software License, Version 2.0') // optional
+    POM_LICENCE_NAME('The Apache Software License, Version 2.0')      // optional
     POM_LICENCE_URL('http://www.apache.org/licenses/LICENSE-2.0.txt') // optional
-    POM_LICENCE_DIST('repo') // optional
+    POM_LICENCE_DIST('repo')                                          // optional
 
-    POM_DEVELOPER_ID('kaedea') // optional
+    POM_DEVELOPER_ID('kaedea')           // optional
     POM_DEVELOPER_NAME('Kaede Akatsuki') // optional
 
-    RELEASE_REPOSITORY_URL('') // required
+    RELEASE_REPOSITORY_URL('')  // required
     SNAPSHOT_REPOSITORY_URL('') // required
-    NEXUS_USERNAME('') // required input
-    NEXUS_PASSWORD('') // required input
+    NEXUS_USERNAME('')          // required input
+    NEXUS_PASSWORD('')          // required input
+
+    uploadToBintray = true             // optional, to enable bintrayUpload
+    BINTRAY_REPO('maven')              // required
+    BINTRAY_NAME('publication')        // optional
+    BINTRAY_USERNAME('kaedea')         // required input
+    BINTRAY_API_KEY('bintray_api_key') // required input
 }
+```
+
+Now, here you go with the publish tasks
+
+```bash
+gradle :uploadArchives
+gradle :bintrayUpload
 ```
 
 ## References
