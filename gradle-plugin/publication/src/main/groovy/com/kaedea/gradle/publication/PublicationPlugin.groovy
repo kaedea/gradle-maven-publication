@@ -39,22 +39,26 @@ class PublicationPlugin implements Plugin<Project> {
                 "$project.path:$MavenPlugin.INSTALL_TASK_NAME"
     }
 
-    def repositoryUsername = { Utils.readFromProperties(project, 'NEXUS_USERNAME') }
-    def repositoryPassword = { Utils.readFromProperties(project, 'NEXUS_PASSWORD') }
+    def required = { Utils.readFromPropertiesVital(project, it) }
+    def optionally = { Utils.readFromProperties(project, it) }
+
+    def repositoryUsername = { Utils.readFromProperties(project, 'NEXUS_USERNAME', true) }
+    def repositoryPassword = { Utils.readFromProperties(project, 'NEXUS_PASSWORD', true) }
     def releaseRepositoryUrl = { Utils.readFromProperties(project, 'RELEASE_REPOSITORY_URL') }
     def snapshotRepositoryUrl = { Utils.readFromProperties(project, 'SNAPSHOT_REPOSITORY_URL') }
 
     @Override
     void apply(Project project) {
+        this.project = project
+
         project.logger.lifecycle "----------"
         project.logger.lifecycle "Publication: apply gradle maven publishing tasks..."
         project.logger.lifecycle "----------"
 
-        this.project = project
         project.plugins.apply(MavenPlugin)
         project.plugins.apply(SigningPlugin)
-        project.group = project.GROUP
-        project.version = project.VERSION_NAME
+        project.group = required('GROUP')
+        project.version = required('VERSION_NAME')
 
         configureArtifactTasks()
         configurePom()
@@ -100,22 +104,10 @@ class PublicationPlugin implements Plugin<Project> {
             classifier = 'javadoc'
             group = "build"
             description = 'Assembles a jar archive containing the generated Javadoc API documentation of this project.'
-            from getDocTask()
+            from project.plugins.hasPlugin(GroovyPlugin) ?
+                    project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
+                    project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
         }
-    }
-
-    private def getDocTask() {
-        hasGroovyPlugin() ?
-                project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
-                project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
-    }
-
-    private boolean hasGroovyPlugin() {
-        hasPlugin(GroovyPlugin)
-    }
-
-    private boolean hasPlugin(Class<? extends Plugin> pluginClass) {
-        project.plugins.hasPlugin(pluginClass)
     }
 
     private void addArtifactTask(String taskName) {
@@ -129,31 +121,31 @@ class PublicationPlugin implements Plugin<Project> {
         project.afterEvaluate {
             project.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
                 pom.project {
-                    groupId project.GROUP
-                    artifactId project.POM_ARTIFACT_ID
-                    version project.VERSION_NAME
+                    groupId required('GROUP')
+                    artifactId required('POM_ARTIFACT_ID')
+                    version required('VERSION_NAME')
 
-                    name project.POM_NAME
-                    packaging project.POM_PACKAGING
-                    url project.POM_URL
-                    description project.POM_DESCRIPTION
+                    name optionally('POM_NAME') ?: project.name
+                    packaging optionally('POM_PACKAGING') ?: 'jar'
+                    url optionally('POM_URL')
+                    description optionally('POM_DESCRIPTION')
 
                     scm {
-                        url project.POM_SCM_URL
-                        connection project.POM_SCM_CONNECTION
-                        developerConnection project.POM_SCM_DEV_CONNECTION
+                        url optionally('POM_SCM_URL')
+                        connection optionally('POM_SCM_CONNECTION')
+                        developerConnection optionally('POM_SCM_DEV_CONNECTION')
                     }
                     licenses {
                         license {
-                            name project.POM_LICENCE_NAME
-                            url project.POM_LICENCE_URL
-                            distribution project.POM_LICENCE_DIST
+                            name optionally('POM_LICENCE_NAME')
+                            url optionally('POM_LICENCE_URL')
+                            distribution optionally('POM_LICENCE_DIST')
                         }
                     }
                     developers {
                         developer {
-                            id project.POM_DEVELOPER_ID
-                            name project.POM_DEVELOPER_NAME
+                            id optionally('POM_DEVELOPER_ID')
+                            name optionally('POM_DEVELOPER_NAME')
                         }
                     }
                 }
@@ -228,7 +220,9 @@ class PublicationPlugin implements Plugin<Project> {
             }
         }
         project.signing {
-            required { Utils.isReleaseBuild(project) && project.gradle.taskGraph.hasTask("uploadArchives") }
+            required {
+                Utils.isReleaseBuild(project) && project.gradle.taskGraph.hasTask("uploadArchives")
+            }
             sign project.configurations.archives
         }
     }
