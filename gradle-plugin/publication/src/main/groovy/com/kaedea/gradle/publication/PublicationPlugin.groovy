@@ -24,29 +24,33 @@ import org.gradle.plugins.signing.SigningPlugin
 class PublicationPlugin implements Plugin<Project> {
 
     def project
+    def extension
+
     def uploadTaskPath = {
         project.rootProject == project ?
                 ":uploadArchives" :
                 "$project.path:uploadArchives"
     }
-
     def installTaskPath = {
         project.rootProject == project ?
                 ":$MavenPlugin.INSTALL_TASK_NAME" :
                 "$project.path:$MavenPlugin.INSTALL_TASK_NAME"
     }
 
-    def required = { Utils.readFromPropertiesVital(project, it) }
-    def optionally = { Utils.readFromProperties(project, it) }
+    def required = { extension.get(it) ?: Utils.readFromPropertiesVital(project, it) }
+    def optionally = { extension.get(it) ?: Utils.readFromProperties(project, it) }
 
-    def repositoryUsername = { Utils.readFromProperties(project, 'NEXUS_USERNAME', true) }
-    def repositoryPassword = { Utils.readFromProperties(project, 'NEXUS_PASSWORD', true) }
-    def releaseRepositoryUrl = { Utils.readFromProperties(project, 'RELEASE_REPOSITORY_URL') }
-    def snapshotRepositoryUrl = { Utils.readFromProperties(project, 'SNAPSHOT_REPOSITORY_URL') }
+    def repositoryUsername = {
+        extension.get(it) ?: Utils.readFromProperties(project, Extension.NEXUS_USERNAME, true)
+    }
+    def repositoryPassword = {
+        extension.get(it) ?: Utils.readFromProperties(project, Extension.NEXUS_PASSWORD, true)
+    }
 
     @Override
     void apply(Project project) {
         this.project = project
+        this.extension = project.extensions.create('publication', Extension)
 
         project.logger.lifecycle "----------"
         project.logger.lifecycle "Publication: apply gradle maven publishing tasks..."
@@ -54,8 +58,8 @@ class PublicationPlugin implements Plugin<Project> {
 
         project.plugins.apply(MavenPlugin)
         project.plugins.apply(SigningPlugin)
-        project.group = required('GROUP')
-        project.version = required('VERSION_NAME')
+        project.group = required(Extension.GROUP)
+        project.version = required(Extension.VERSION_NAME)
 
         configureArtifactTasks()
         configurePom()
@@ -72,7 +76,6 @@ class PublicationPlugin implements Plugin<Project> {
             project.tasks.withType(JavaCompile) {
                 options.encoding = "UTF-8"
             }
-
             project.tasks.withType(Javadoc).all {
                 options.encoding = "UTF-8"
                 options.addStringOption('encoding', 'UTF-8')
@@ -82,14 +85,29 @@ class PublicationPlugin implements Plugin<Project> {
             }
 
             if (Utils.isAndroidProject(project)) {
-                addArtifactTask("androidSourcesJar")
-                addArtifactTask("androidJavadocJar")
-                addArtifactTask("androidTestsJar")
-                addArtifactTask("testsJar")
+                if (extension.jarSources) {
+                    addArtifactTask("androidSourcesJar")
+                }
+                if (extension.jarJavaDoc) {
+                    addArtifactTask("androidJavadocJar")
+                }
+                if (extension.jarTests) {
+                    addArtifactTask("androidTestsJar")
+                    addArtifactTask("testsJar")
+                }
+                // Kotlin
             } else {
-                addArtifactTask("sourcesJar")
-                addArtifactTask("javadocJar")
-                addArtifactTask("testsJar")
+                if (extension.jarSources) {
+                    addArtifactTask("sourcesJar")
+                }
+                if (extension.jarJavaDoc) {
+                    addArtifactTask("javadocJar")
+                }
+                if (extension.jarTests) {
+                    addArtifactTask("testsJar")
+                }
+                // Groovy
+                // Kotlin
             }
         }
     }
@@ -196,31 +214,31 @@ class PublicationPlugin implements Plugin<Project> {
         project.afterEvaluate {
             project.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
                 pom.project {
-                    groupId required('GROUP')
-                    artifactId required('POM_ARTIFACT_ID')
-                    version required('VERSION_NAME')
+                    groupId required(Extension.GROUP)
+                    artifactId optionally(Extension.POM_ARTIFACT_ID) ?: project.name
+                    version required(Extension.VERSION_NAME)
 
-                    name optionally('POM_NAME') ?: project.name
-                    packaging optionally('POM_PACKAGING') ?: Utils.isAndroidProject(project) ? 'aar' : 'jar'
-                    url optionally('POM_URL')
-                    description optionally('POM_DESCRIPTION')
+                    name optionally(Extension.POM_NAME) ?: project.name
+                    packaging optionally(Extension.POM_PACKAGING) ?: Utils.isAndroidProject(project) ? 'aar' : 'jar'
+                    url optionally(Extension.POM_URL)
+                    description optionally(Extension.POM_DESCRIPTION)
 
                     scm {
-                        url optionally('POM_SCM_URL')
-                        connection optionally('POM_SCM_CONNECTION')
-                        developerConnection optionally('POM_SCM_DEV_CONNECTION')
+                        url optionally(Extension.POM_SCM_URL)
+                        connection optionally(Extension.POM_SCM_CONNECTION)
+                        developerConnection optionally(Extension.POM_SCM_DEV_CONNECTION)
                     }
                     licenses {
                         license {
-                            name optionally('POM_LICENCE_NAME')
-                            url optionally('POM_LICENCE_URL')
-                            distribution optionally('POM_LICENCE_DIST')
+                            name optionally(Extension.POM_LICENCE_NAME)
+                            url optionally(Extension.POM_LICENCE_URL)
+                            distribution optionally(Extension.POM_LICENCE_DIST)
                         }
                     }
                     developers {
                         developer {
-                            id optionally('POM_DEVELOPER_ID')
-                            name optionally('POM_DEVELOPER_NAME')
+                            id optionally(Extension.POM_DEVELOPER_ID)
+                            name optionally(Extension.POM_DEVELOPER_NAME)
                         }
                     }
                 }
@@ -253,21 +271,22 @@ class PublicationPlugin implements Plugin<Project> {
                 project.gradle.taskGraph.whenReady { TaskExecutionGraph taskGraph ->
                     if (taskGraph.hasTask(uploadTaskPath())) {
 
-                        if (!releaseRepositoryUrl() && !snapshotRepositoryUrl()) {
+                        if (!optionally(Extension.RELEASE_REPOSITORY_URL)
+                                && !optionally(Extension.SNAPSHOT_REPOSITORY_URL)) {
                             // publish to local maven
                             repository(url: project.uri(project.rootProject.file('maven')))
                         }
 
-                        if (releaseRepositoryUrl()) {
-                            repository(url: releaseRepositoryUrl()) {
+                        if (optionally(Extension.RELEASE_REPOSITORY_URL)) {
+                            repository(url: optionally(Extension.RELEASE_REPOSITORY_URL)) {
                                 authentication(
                                         userName: repositoryUsername(),
                                         password: repositoryPassword()
                                 )
                             }
                         }
-                        if (snapshotRepositoryUrl()) {
-                            snapshotRepository(url: snapshotRepositoryUrl()) {
+                        if (optionally(Extension.SNAPSHOT_REPOSITORY_URL)) {
+                            snapshotRepository(url: optionally(Extension.SNAPSHOT_REPOSITORY_URL)) {
                                 authentication(
                                         userName: repositoryUsername(),
                                         password: repositoryPassword()
