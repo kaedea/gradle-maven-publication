@@ -86,38 +86,55 @@ class PublicationPlugin implements Plugin<Project> {
                 }
             }
 
-            addArtifactTask("sourcesJar")
-            addArtifactTask("javadocJar")
-            addArtifactTask("testsJar")
+            if (Utils.isAndroidProject(project)) {
+                addArtifactTask("androidSourcesJar")
+            } else {
+                addArtifactTask("sourcesJar")
+                addArtifactTask("javadocJar")
+                addArtifactTask("testsJar")
+            }
         }
     }
 
     private void configureSourcesJarTask() {
-        project.task('sourcesJar', type: Jar) {
-            classifier = 'sources'
-            group = 'build'
-            description = 'Assembles a jar archive containing the main sources of this mProject.'
-            from project.sourceSets.main.allSource
+        if (Utils.isAndroidProject(project)) {
+            project.task('androidSourcesJar', type: Jar) {
+                classifier = 'sources'
+                group = 'build'
+                description = 'Assemble a jar archive containing the main sources.'
+                from project.android.sourceSets.main.java.source
+            }
+        } else {
+            project.task('sourcesJar', type: Jar) {
+                classifier = 'sources'
+                group = 'build'
+                description = 'Assemble a jar archive containing the main sources.'
+                from project.sourceSets.main.allSource
+            }
         }
     }
 
     private void configureJavadocJarTask() {
-        project.task('javadocJar', type: Jar) {
-            classifier = 'javadoc'
-            group = 'build'
-            description = 'Assembles a jar archive containing the generated Javadoc API documentation of this project.'
-            from project.plugins.hasPlugin(GroovyPlugin) ?
-                    project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
-                    project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
+        if (!Utils.isAndroidProject(project)) {
+            project.task('javadocJar', type: Jar) {
+                classifier = 'javadoc'
+                group = 'build'
+                description = 'Assemble a jar archive containing the generated Javadoc API documentation.'
+                from project.plugins.hasPlugin(GroovyPlugin) ?
+                        project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
+                        project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
+            }
         }
     }
 
     private void configureTestsJarTask() {
-        project.task('testsJar', type: Jar) {
-            classifier = 'tests'
-            group = 'build'
-            description = 'Assembles a jar archive containing the test sources of this project.'
-            from project.sourceSets.test.output
+        if (!Utils.isAndroidProject(project)) {
+            project.task('testsJar', type: Jar) {
+                classifier = 'tests'
+                group = 'build'
+                description = 'Assemble a jar archive containing the tests sources.'
+                from project.sourceSets.test.output
+            }
         }
     }
 
@@ -137,7 +154,7 @@ class PublicationPlugin implements Plugin<Project> {
                     version required('VERSION_NAME')
 
                     name optionally('POM_NAME') ?: project.name
-                    packaging optionally('POM_PACKAGING') ?: 'jar'
+                    packaging optionally('POM_PACKAGING') ?: Utils.isAndroidProject(project) ? 'aar' : 'jar'
                     url optionally('POM_URL')
                     description optionally('POM_DESCRIPTION')
 
@@ -165,9 +182,20 @@ class PublicationPlugin implements Plugin<Project> {
                 def addDependency = { configuration, scope ->
                     if (configuration != null) scopeMappings.addMapping(1, configuration, scope)
                 }
-                addDependency(project.configurations.implementation, 'compile')
-                addDependency(project.configurations.compileOnly, 'provided')
-                addDependency(project.configurations.runtimeOnly, 'runtime')
+                if (Utils.isAndroidProject(project)) {
+                    addDependency(project.configurations.provided, 'provided')
+                    addDependency(project.configurations.compileOnly, 'provided')
+                    addDependency(project.configurations.androidTestCompile, 'test')
+                    addDependency(project.configurations.androidTestApi, 'test')
+                    addDependency(project.configurations.androidTestImplementation, 'test')
+                    addDependency(project.configurations.testCompile, 'test')
+                    addDependency(project.configurations.testApi, 'test')
+                    addDependency(project.configurations.testImplementation, 'test')
+                } else {
+                    addDependency(project.configurations.implementation, 'compile')
+                    addDependency(project.configurations.compileOnly, 'provided')
+                    addDependency(project.configurations.runtimeOnly, 'runtime')
+                }
             }
         }
     }

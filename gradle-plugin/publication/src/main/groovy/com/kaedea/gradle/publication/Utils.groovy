@@ -12,6 +12,12 @@ import org.gradle.api.Project
  */
 class Utils {
 
+    static def isAndroidProject(Project project) {
+        def plugins = project.getPlugins()
+        plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')
+    }
+
+
     static def isReleaseBuild(Project project) {
         def version = project.version ?
                 project.version :
