@@ -4,10 +4,7 @@
 
 package com.kaedea.gradle.publication
 
-import org.gradle.api.JavaVersion
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.*
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.maven.MavenDeployment
 import org.gradle.api.execution.TaskExecutionGraph
@@ -68,11 +65,9 @@ class PublicationPlugin implements Plugin<Project> {
 
     private void configureArtifactTasks() {
         project.afterEvaluate {
-            project.plugins.withType(JavaPlugin) {
-                configureSourcesJarTask()
-                configureJavadocJarTask()
-                configureTestsJarTask()
-            }
+            configureSourcesJarTask()
+            configureJavadocJarTask()
+            configureTestsJarTask()
 
             project.tasks.withType(JavaCompile) {
                 options.encoding = "UTF-8"
@@ -88,7 +83,9 @@ class PublicationPlugin implements Plugin<Project> {
 
             if (Utils.isAndroidProject(project)) {
                 addArtifactTask("androidSourcesJar")
-                addArtifactTask("androidJavadoc")
+                addArtifactTask("androidJavadocJar")
+                addArtifactTask("androidTestsJar")
+                addArtifactTask("testsJar")
             } else {
                 addArtifactTask("sourcesJar")
                 addArtifactTask("javadocJar")
@@ -107,7 +104,7 @@ class PublicationPlugin implements Plugin<Project> {
             }
             project.android.libraryVariants.all { variant ->
                 def name = variant.name
-                Task "jar${name.capitalize()}"(type: Jar, dependsOn: variant.javaCompile) {
+                project.task("jar${name.capitalize()}", type: Jar, dependsOn: variant.javaCompile) {
                     from variant.javaCompile.destinationDir
                 }
                 if (name == 'release') {
@@ -127,7 +124,30 @@ class PublicationPlugin implements Plugin<Project> {
     }
 
     private void configureJavadocJarTask() {
-        if (!Utils.isAndroidProject(project)) {
+        if (Utils.isAndroidProject(project)) {
+            project.task('androidJavadoc', type: Javadoc) {
+                group = 'build'
+                description = 'Generated Android Javadoc API documentation.'
+                source = project.android.sourceSets.main.java.source
+                exclude '**/R.html'
+                exclude '**/R.*.html'
+                exclude '**/index.html'
+                exclude '**/pom.xml'
+                exclude '**/proguard_annotations.pro'
+                classpath += project.files(project.android.bootClasspath.join(File.pathSeparator))
+                project.android.libraryVariants.all { variant ->
+                    if (variant.name == 'release') {
+                        owner.classpath += variant.javaCompile.classpath
+                    }
+                }
+            }
+            project.task('androidJavadocJar', type: Jar, dependsOn: 'androidJavadoc') {
+                classifier = 'javadoc'
+                group = 'build'
+                description = 'Assemble a jar archive containing the generated Javadoc API documentation.'
+                from project.androidJavadoc.destinationDir
+            }
+        } else {
             project.task('javadocJar', type: Jar) {
                 classifier = 'javadoc'
                 group = 'build'
@@ -136,40 +156,28 @@ class PublicationPlugin implements Plugin<Project> {
                         project.tasks.getByName(GroovyPlugin.GROOVYDOC_TASK_NAME) :
                         project.tasks.getByName(JavaPlugin.JAVADOC_TASK_NAME)
             }
-        } else {
-            project.task('androidJavadoc', type: Javadoc) {
-                classifier = 'javadoc'
-                group = 'build'
-                description = 'Generated Android Javadoc API documentation.'
-                source = android.sourceSets.main.java.source
-                exclude '**/R.html'
-                exclude '**/R.*.html'
-                exclude '**/index.html'
-                exclude '**/pom.xml'
-                exclude '**/proguard_annotations.pro'
-                classpath += files(project.android.bootClasspath.join(File.pathSeparator))
-                project.android.libraryVariants.all { variant ->
-                    if (variant.name == 'release') {
-                        owner.classpath += variant.javaCompile.classpath
-                    }
-                }
-            }
-
-            project.task('androidJavadocJar', type: androidJavadoc) {
-                classifier = 'javadoc'
-                group = 'build'
-                description = 'Assemble a jar archive containing the generated Javadoc API documentation.'
-                from androidJavadoc.destinationDir
-            }
         }
     }
 
     private void configureTestsJarTask() {
-        if (!Utils.isAndroidProject(project)) {
+        if (Utils.isAndroidProject(project)) {
+            project.task('androidTestsJar', type: Jar) {
+                classifier = 'androidTests'
+                group = 'build'
+                description = 'Assemble a jar archive containing the androidTest sources.'
+                from project.android.sourceSets.androidTest.java.source // Not sure here
+            }
             project.task('testsJar', type: Jar) {
                 classifier = 'tests'
                 group = 'build'
-                description = 'Assemble a jar archive containing the tests sources.'
+                description = 'Assemble a jar archive containing the test sources.'
+                from project.android.sourceSets.test.java.source // Not sure here
+            }
+        } else {
+            project.task('testsJar', type: Jar) {
+                classifier = 'tests'
+                group = 'build'
+                description = 'Assemble a jar archive containing the test sources.'
                 from project.sourceSets.test.output
             }
         }
@@ -179,6 +187,8 @@ class PublicationPlugin implements Plugin<Project> {
         Task task = project.tasks.findByName(taskName)
         if (task) {
             project.artifacts.add(Dependency.ARCHIVES_CONFIGURATION, task)
+        } else {
+            throw new GradleException("Can not find task, name = $taskName")
         }
     }
 
