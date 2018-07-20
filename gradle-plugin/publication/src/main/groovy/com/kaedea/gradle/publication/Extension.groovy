@@ -33,9 +33,15 @@ class Extension {
     public static final String NEXUS_USERNAME = 'NEXUS_USERNAME'
     public static final String NEXUS_PASSWORD = 'NEXUS_PASSWORD'
 
+    public static final String BINTRAY_REPO = 'BINTRAY_REPO'
+    public static final String BINTRAY_NAME = 'BINTRAY_NAME'
+    public static final String BINTRAY_USERNAME = 'BINTRAY_USERNAME'
+    public static final String BINTRAY_API_KEY = 'BINTRAY_API_KEY'
+
     Boolean jarSources = Boolean.TRUE
     Boolean jarJavaDoc = Boolean.FALSE
     Boolean jarTests = Boolean.FALSE
+    Boolean uploadToBintray = Boolean.FALSE
     Map<String, String> properties = new HashMap<>()
 
     String get(String key) {
@@ -116,5 +122,21 @@ class Extension {
 
     void NEXUS_PASSWORD(String value) {
         properties.put('NEXUS_PASSWORD', value)
+    }
+
+    void BINTRAY_REPO(String value) {
+        properties.put('BINTRAY_REPO', value)
+    }
+
+    void BINTRAY_NAME(String value) {
+        properties.put('BINTRAY_NAME', value)
+    }
+
+    void BINTRAY_USERNAME(String value) {
+        properties.put('BINTRAY_USERNAME', value)
+    }
+
+    void BINTRAY_API_KEY(String value) {
+        properties.put('BINTRAY_API_KEY', value)
     }
 }

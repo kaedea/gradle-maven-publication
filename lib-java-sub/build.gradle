@@ -34,10 +34,11 @@ targetCompatibility = JavaVersion.VERSION_1_7
 // ----------
 buildscript {
     repositories {
-         maven { url rootProject.file('maven') }
+        jcenter()
+        maven { url rootProject.file('maven') }
     }
     dependencies {
-        classpath 'com.kaedea:publication:0.1.0-SNAPSHOT'
+        classpath 'com.kaedea:publication:0.3.0-SNAPSHOT'
     }
 }
 apply plugin: 'com.kaedea.publication'
@@ -65,4 +66,10 @@ publication {
 
     POM_DEVELOPER_ID('kaedea')
     POM_DEVELOPER_NAME('Kaede Akatsuki')
+
+    uploadToBintray = true
+    BINTRAY_REPO('repo')
+    BINTRAY_NAME('publication-java-sub')
+    BINTRAY_USERNAME('kaedea')
+    BINTRAY_API_KEY('bintray_api_key')
 }

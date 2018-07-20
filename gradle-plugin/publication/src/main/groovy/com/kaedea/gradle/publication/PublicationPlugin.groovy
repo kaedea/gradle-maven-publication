@@ -41,10 +41,12 @@ class PublicationPlugin implements Plugin<Project> {
     def optionally = { extension.get(it) ?: Utils.readFromProperties(project, it) }
 
     def repositoryUsername = {
-        extension.get(it) ?: Utils.readFromProperties(project, Extension.NEXUS_USERNAME, true)
+        extension.get(Extension.NEXUS_USERNAME) ?:
+                Utils.readFromProperties(project, Extension.NEXUS_USERNAME, true)
     }
     def repositoryPassword = {
-        extension.get(it) ?: Utils.readFromProperties(project, Extension.NEXUS_PASSWORD, true)
+        extension.get(Extension.NEXUS_PASSWORD) ?:
+                Utils.readFromProperties(project, Extension.NEXUS_PASSWORD, true)
     }
 
     @Override
@@ -65,6 +67,7 @@ class PublicationPlugin implements Plugin<Project> {
         configurePom()
         configureUpload()
         configureSigning()
+        configureBintray()
     }
 
     private void configureArtifactTasks() {
@@ -331,5 +334,60 @@ class PublicationPlugin implements Plugin<Project> {
             }
             sign project.configurations.archives
         }
+    }
+
+    private void configureBintray() {
+        project.afterEvaluate {
+            if (extension.uploadToBintray) {
+                project.plugins.apply('com.jfrog.bintray')
+                project.bintray {
+                    user = bintrayUsername()
+                    key = bintrayApiKey()
+                    configurations = ['archives']
+
+                    pkg {
+                        repo = optionally(Extension.BINTRAY_REPO) ?: 'repo'
+                        name = optionally(Extension.BINTRAY_NAME) ?: optionally(Extension.POM_ARTIFACT_ID) ?: project.name
+                        desc = optionally(Extension.POM_DESCRIPTION)
+                        websiteUrl = optionally(Extension.POM_URL)
+                        issueTrackerUrl = getBintrayIssueTrackerUrl()
+                        vcsUrl = getBintrayVcsUrl()
+                        licenses = [optionally(Extension.POM_LICENCE_NAME)]
+                        labels = Utils.isAndroidProject(project) ? ['aar', 'android'] : ['jar', 'java']
+                        publicDownloadNumbers = true
+                    }
+                }
+            }
+        }
+    }
+
+    def getBintrayIssueTrackerUrl = { ->
+        def url = optionally(Extension.POM_URL)
+        if (url) {
+            if (url.startsWith("https://github.com") || url.startsWith("http://github.com")) {
+                if (!url.endsWith("/")) url += "/"
+                return url + "issues"
+            }
+        }
+    }
+
+    def getBintrayVcsUrl = { ->
+        def url = optionally(Extension.POM_URL)
+        if (url) {
+            if (url.startsWith("https://github.com") || url.startsWith("http://github.com")) {
+                if (url.endsWith("/")) url = url.substring(0, url.length() - 2)
+                return url + ".git"
+            }
+        }
+    }
+
+    def bintrayUsername = {
+        extension.get(Extension.BINTRAY_USERNAME) ?:
+                Utils.readFromProperties(project, Extension.BINTRAY_USERNAME, true)
+    }
+
+    def bintrayApiKey = {
+        extension.get(Extension.BINTRAY_API_KEY) ?:
+                Utils.readFromProperties(project, Extension.BINTRAY_API_KEY, true)
     }
 }
