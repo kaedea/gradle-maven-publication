@@ -42,9 +42,9 @@ buildscript {
 }
 apply plugin: 'com.kaedea.publication'
 publication {
-    jarSources = true // optional
-    jarJavaDoc = true // optional
-    jarTests = true // optional
+    jarSources = true
+    jarJavaDoc = false
+    jarTests = false
 
     GROUP('com.kaedea')
     VERSION_NAME('0.1.0-SNAPSHOT')

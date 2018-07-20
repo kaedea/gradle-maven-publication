@@ -20,3 +20,13 @@ targetCompatibility = JavaVersion.VERSION_1_8
 // with 'maven'
 // ----------
 apply from: rootProject.file('gradle/maven.gradle')
+
+// ----------
+// with 'bintray'
+// For non-builtin plugin, we should add classpath within 'build.gradle'
+// ----------
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3' }
+}
+apply from: rootProject.file('gradle/bintray.gradle')

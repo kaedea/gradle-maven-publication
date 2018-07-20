@@ -96,6 +96,7 @@ class PublicationPlugin implements Plugin<Project> {
                     addArtifactTask("testsJar")
                 }
                 // Kotlin
+                // @see "https://github.com/Kotlin/dokka"
             } else {
                 if (extension.jarSources) {
                     addArtifactTask("sourcesJar")
