@@ -139,7 +139,61 @@ gradle :bintrayUpload
 
 ### Plugin
 
-Work in progress
+Publication plugin works in the same way of `maven.gradle` but much simpler.
+
+1. Apply the 'com.kaedea.publication' plugin.
+2. Config the properties.
+3. Run tasks to publish artifacts to local/remote repository.
+
+Apply plugin like:
+
+```groovy
+buildscript {
+    dependencies {
+        classpath 'com.kaedea:publication:latest.integration'
+    }
+}
+apply plugin: 'com.kaedea.publication'
+```
+
+Config the plugin:
+
+```groovy
+// You can configure the publishing in the following, or gradle.properties, or System.env
+// 'optional': be configured or not
+// 'required': must be configured
+// 'required input': be configured, or the console will ask you to input the value
+publication {
+    jarSources = true // optional
+    jarJavaDoc = true // optional
+    jarTests = true // optional
+
+    GROUP('com.kaedea')
+    VERSION_NAME('0.1.0-SNAPSHOT')
+
+    POM_NAME('Publication') // optional
+    POM_ARTIFACT_ID('publication') // optional
+    POM_PACKAGING('jar') // optional
+    POM_URL('https://github.com/kaedea/publication/') // optional
+    POM_DESCRIPTION('Gradle plugin that make the publishing') // optional
+
+    POM_SCM_URL('https://github.com/kaedea/publication/') // optional
+    POM_SCM_CONNECTION('scm:git:git://github.com/kaedea/publication.git') // optional
+    POM_SCM_DEV_CONNECTION('scm:git:ssh://git@github.com:kaedea/publication.git') // optional
+
+    POM_LICENCE_NAME('The Apache Software License, Version 2.0') // optional
+    POM_LICENCE_URL('http://www.apache.org/licenses/LICENSE-2.0.txt') // optional
+    POM_LICENCE_DIST('repo') // optional
+
+    POM_DEVELOPER_ID('kaedea') // optional
+    POM_DEVELOPER_NAME('Kaede Akatsuki') // optional
+
+    RELEASE_REPOSITORY_URL('') // required
+    SNAPSHOT_REPOSITORY_URL('') // required
+    NEXUS_USERNAME('') // required input
+    NEXUS_PASSWORD('') // required input
+}
+```
 
 ## References
 
