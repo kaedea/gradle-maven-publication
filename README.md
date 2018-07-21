@@ -47,34 +47,34 @@ Config the project properties like:
 # ----------
 # Maven repository config
 # ----------
-RELEASE_REPOSITORY_URL=(required here or system env)
-SNAPSHOT_REPOSITORY_URL=(required here or system env)
+RELEASE_REPOSITORY_URL=  (required here or system env)
+SNAPSHOT_REPOSITORY_URL= (required here or system env)
 
-NEXUS_USERNAME=(required here or system env)
-NEXUS_PASSWORD=(required here or system env)
+NEXUS_USERNAME= (required here or system env)
+NEXUS_PASSWORD= (required here or system env)
 
-POM_URL=https://github.com/kaedea/gradle-maven-publication/
-POM_SCM_URL=https://github.com/kaedea/gradle-maven-publication/
-POM_SCM_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git
-POM_SCM_DEV_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git
+POM_URL=https://github.com/kaedea/gradle-maven-publication/                   (optional)
+POM_SCM_URL=https://github.com/kaedea/gradle-maven-publication/               (optional)
+POM_SCM_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git     (optional)
+POM_SCM_DEV_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git (optional)
 
-POM_LICENCE_NAME=The Apache Software License, Version 2.0
-POM_LICENCE_URL=http://www.apache.org/licenses/LICENSE-2.0.txt
-POM_LICENCE_DIST=repo
+POM_LICENCE_NAME=The Apache Software License, Version 2.0      (optional)
+POM_LICENCE_URL=http://www.apache.org/licenses/LICENSE-2.0.txt (optional)
+POM_LICENCE_DIST=repo                                          (optional)
 
-POM_DEVELOPER_ID=kaedea
-POM_DEVELOPER_NAME=Kaede Akatsuki
+POM_DEVELOPER_ID=kaedea           (optional)
+POM_DEVELOPER_NAME=Kaede Akatsuki (optional)
 
 # ----------
 # Maven artifact config
 # ----------
-GROUP=com.kaedea (required)
+GROUP=com.kaedea            (required)
 VERSION_NAME=0.1.0-SNAPSHOT (required)
 
-POM_NAME=Publication
-POM_ARTIFACT_ID=publication
-POM_PACKAGING=jar|aar
-POM_DESCRIPTION=Gradle plugin that make the publishing
+POM_NAME=Publication                                   (optional)
+POM_ARTIFACT_ID=publication                            (optional)
+POM_PACKAGING=jar|aar                                  (optional)
+POM_DESCRIPTION=Gradle plugin that make the publishing (optional)
 ```
 
 Apply the script in your project's build.gradle:
@@ -116,14 +116,14 @@ Config the project properties like:
 # ----------
 # Bintray auth config
 # ----------
-BINTRAY_USERNAME=(required here or system env)
-BINTRAY_API_KEY=(required here or system env)
+BINTRAY_USERNAME= (required here or system env)
+BINTRAY_API_KEY=  (required here or system env)
 
 # ----------
 # Maven repo config
 # ----------
-BINTRAY_REPO=maven
-BINTRAY_NAME=publication
+BINTRAY_REPO=maven       (required)
+BINTRAY_NAME=publication (optional)
 ```
 
 Apply the script in your project's build.gradle as [Script](#Script) above, then apply the bintray script:
