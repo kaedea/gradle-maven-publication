@@ -41,6 +41,7 @@ class Extension {
     Boolean jarSources = Boolean.TRUE
     Boolean jarJavaDoc = Boolean.FALSE
     Boolean jarTests = Boolean.FALSE
+    Boolean signing = Boolean.FALSE
     Boolean uploadToBintray = Boolean.FALSE
     Map<String, String> properties = new HashMap<>()
 
