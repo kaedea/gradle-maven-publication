@@ -7,6 +7,7 @@ package com.kaedea.gradle.publication
 import org.gradle.api.*
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.maven.MavenDeployment
+import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.plugins.GroovyPlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.MavenPlugin
@@ -30,9 +31,14 @@ class PublicationPlugin implements Plugin<Project> {
                 ":uploadArchives" :
                 "$project.path:uploadArchives"
     }
+    def installTaskPath = {
+        project.rootProject == project ?
+                ":$MavenPlugin.INSTALL_TASK_NAME" :
+                "$project.path:$MavenPlugin.INSTALL_TASK_NAME"
+    }
 
-    def opt = { extension.get(it) ?: Utils.readFromProperties(project, it) }
-    def must = { extension.get(it) ?: Utils.readFromPropertiesVital(project, it) }
+    def required = { extension.get(it) ?: Utils.readFromPropertiesVital(project, it) }
+    def optionally = { extension.get(it) ?: Utils.readFromProperties(project, it) }
 
     def repositoryUsername = {
         extension.get(Extension.NEXUS_USERNAME) ?:
@@ -54,11 +60,12 @@ class PublicationPlugin implements Plugin<Project> {
 
         project.plugins.apply(MavenPlugin)
         project.plugins.apply(SigningPlugin)
-        project.group = must(Extension.GROUP)
-        project.version = must(Extension.VERSION_NAME)
+        project.group = required(Extension.GROUP)
+        project.version = required(Extension.VERSION_NAME)
 
         configureArtifactTasks()
-        configurePomAndUpload()
+        configurePom()
+        configureUpload()
         configureSigning()
         configureBintray()
     }
@@ -207,35 +214,35 @@ class PublicationPlugin implements Plugin<Project> {
         }
     }
 
-    private void configurePomAndUpload() {
+    private void configurePom() {
         project.afterEvaluate {
             project.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
                 pom.project {
-                    groupId must(Extension.GROUP)
-                    artifactId opt(Extension.POM_ARTIFACT_ID) ?: project.name
-                    version must(Extension.VERSION_NAME)
+                    groupId required(Extension.GROUP)
+                    artifactId optionally(Extension.POM_ARTIFACT_ID) ?: project.name
+                    version required(Extension.VERSION_NAME)
 
-                    name opt(Extension.POM_NAME) ?: project.name
-                    packaging opt(Extension.POM_PACKAGING) ?: Utils.isAndroidProject(project) ? 'aar' : 'jar'
-                    url opt(Extension.POM_URL)
-                    description opt(Extension.POM_DESCRIPTION)
+                    name optionally(Extension.POM_NAME) ?: project.name
+                    packaging optionally(Extension.POM_PACKAGING) ?: Utils.isAndroidProject(project) ? 'aar' : 'jar'
+                    url optionally(Extension.POM_URL)
+                    description optionally(Extension.POM_DESCRIPTION)
 
                     scm {
-                        url opt(Extension.POM_SCM_URL)
-                        connection opt(Extension.POM_SCM_CONNECTION)
-                        developerConnection opt(Extension.POM_SCM_DEV_CONNECTION)
+                        url optionally(Extension.POM_SCM_URL)
+                        connection optionally(Extension.POM_SCM_CONNECTION)
+                        developerConnection optionally(Extension.POM_SCM_DEV_CONNECTION)
                     }
                     licenses {
                         license {
-                            name opt(Extension.POM_LICENCE_NAME)
-                            url opt(Extension.POM_LICENCE_URL)
-                            distribution opt(Extension.POM_LICENCE_DIST)
+                            name optionally(Extension.POM_LICENCE_NAME)
+                            url optionally(Extension.POM_LICENCE_URL)
+                            distribution optionally(Extension.POM_LICENCE_DIST)
                         }
                     }
                     developers {
                         developer {
-                            id opt(Extension.POM_DEVELOPER_ID)
-                            name opt(Extension.POM_DEVELOPER_NAME)
+                            id optionally(Extension.POM_DEVELOPER_ID)
+                            name optionally(Extension.POM_DEVELOPER_NAME)
                         }
                     }
                 }
@@ -258,27 +265,38 @@ class PublicationPlugin implements Plugin<Project> {
                     addDependency(project.configurations.compileOnly, 'provided')
                     addDependency(project.configurations.runtimeOnly, 'runtime')
                 }
+            }
+        }
+    }
 
-                if (!opt(Extension.RELEASE_REPOSITORY_URL)
-                        && !opt(Extension.SNAPSHOT_REPOSITORY_URL)) {
-                    // publish to local maven
-                    repository(url: project.uri(project.rootProject.file('maven')))
-                }
+    private void configureUpload() {
+        project.afterEvaluate {
+            project.tasks.getByName("uploadArchives").repositories.mavenDeployer() {
+                project.gradle.taskGraph.whenReady { TaskExecutionGraph taskGraph ->
+                    if (taskGraph.hasTask(uploadTaskPath())) {
 
-                if (opt(Extension.RELEASE_REPOSITORY_URL)) {
-                    repository(url: opt(Extension.RELEASE_REPOSITORY_URL)) {
-                        authentication(
-                                userName: repositoryUsername(),
-                                password: repositoryPassword()
-                        )
-                    }
-                }
-                if (opt(Extension.SNAPSHOT_REPOSITORY_URL)) {
-                    snapshotRepository(url: opt(Extension.SNAPSHOT_REPOSITORY_URL)) {
-                        authentication(
-                                userName: repositoryUsername(),
-                                password: repositoryPassword()
-                        )
+                        if (!optionally(Extension.RELEASE_REPOSITORY_URL)
+                                && !optionally(Extension.SNAPSHOT_REPOSITORY_URL)) {
+                            // publish to local maven
+                            repository(url: project.uri(project.rootProject.file('maven')))
+                        }
+
+                        if (optionally(Extension.RELEASE_REPOSITORY_URL)) {
+                            repository(url: optionally(Extension.RELEASE_REPOSITORY_URL)) {
+                                authentication(
+                                        userName: repositoryUsername(),
+                                        password: repositoryPassword()
+                                )
+                            }
+                        }
+                        if (optionally(Extension.SNAPSHOT_REPOSITORY_URL)) {
+                            snapshotRepository(url: optionally(Extension.SNAPSHOT_REPOSITORY_URL)) {
+                                authentication(
+                                        userName: repositoryUsername(),
+                                        password: repositoryPassword()
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -291,6 +309,16 @@ class PublicationPlugin implements Plugin<Project> {
                 project.tasks
                         .withType(Upload)
                         .matching { it.path == uploadTaskPath() }
+                        .each {
+                    it.repositories.mavenDeployer() {
+                        beforeDeployment {
+                            MavenDeployment deployment -> project.signing.signPom(deployment)
+                        }
+                    }
+                }
+                project.tasks
+                        .withType(Upload)
+                        .matching { it.path == installTaskPath() }
                         .each {
                     it.repositories.mavenDeployer() {
                         beforeDeployment {
@@ -318,13 +346,13 @@ class PublicationPlugin implements Plugin<Project> {
                     configurations = ['archives']
 
                     pkg {
-                        repo = opt(Extension.BINTRAY_REPO) ?: 'repo'
-                        name = opt(Extension.BINTRAY_NAME) ?: opt(Extension.POM_ARTIFACT_ID) ?: project.name
-                        desc = opt(Extension.POM_DESCRIPTION)
-                        websiteUrl = opt(Extension.POM_URL)
+                        repo = optionally(Extension.BINTRAY_REPO) ?: 'repo'
+                        name = optionally(Extension.BINTRAY_NAME) ?: optionally(Extension.POM_ARTIFACT_ID) ?: project.name
+                        desc = optionally(Extension.POM_DESCRIPTION)
+                        websiteUrl = optionally(Extension.POM_URL)
                         issueTrackerUrl = getBintrayIssueTrackerUrl()
                         vcsUrl = getBintrayVcsUrl()
-                        licenses = [opt(Extension.POM_LICENCE_NAME)]
+                        licenses = [optionally(Extension.POM_LICENCE_NAME)]
                         labels = Utils.isAndroidProject(project) ? ['aar', 'android'] : ['jar', 'java']
                         publicDownloadNumbers = true
                     }
@@ -334,7 +362,7 @@ class PublicationPlugin implements Plugin<Project> {
     }
 
     def getBintrayIssueTrackerUrl = { ->
-        def url = opt(Extension.POM_URL)
+        def url = optionally(Extension.POM_URL)
         if (url) {
             if (url.startsWith("https://github.com") || url.startsWith("http://github.com")) {
                 if (!url.endsWith("/")) url += "/"
@@ -344,7 +372,7 @@ class PublicationPlugin implements Plugin<Project> {
     }
 
     def getBintrayVcsUrl = { ->
-        def url = opt(Extension.POM_URL)
+        def url = optionally(Extension.POM_URL)
         if (url) {
             if (url.startsWith("https://github.com") || url.startsWith("http://github.com")) {
                 if (url.endsWith("/")) url = url.substring(0, url.length() - 2)
