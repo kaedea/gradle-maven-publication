@@ -38,7 +38,7 @@ buildscript {
         maven { url rootProject.file('maven') }
     }
     dependencies {
-        classpath 'com.kaedea:publication:0.3.0-SNAPSHOT'
+        classpath 'com.kaedea:publication:0.3.0'
     }
 }
 apply plugin: 'com.kaedea.publication'

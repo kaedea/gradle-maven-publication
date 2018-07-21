@@ -44,7 +44,7 @@ dependencies {
 // ----------
 // with 'maven'
 // ----------
-// apply from: rootProject.file('gradle/maven.gradle')
+apply from: rootProject.file('gradle/maven.gradle')
 
 // ----------
 // with 'maven-publish'
@@ -66,40 +66,42 @@ dependencies {
 // with custom 'publication'
 // For non-builtin plugin, we should add classpath within 'build.gradle'
 // ----------
-buildscript {
-    repositories {
-        maven { url rootProject.file('maven') }
-    }
-    dependencies {
-        classpath 'com.kaedea:publication:0.1.0-SNAPSHOT'
-    }
-}
-apply plugin: 'com.kaedea.publication'
-publication {
-    jarSources = false // optional
-    jarJavaDoc = false // optional
-    jarTests = false // optional
+// buildscript {
+//     repositories {
+//         jcenter()
+//         maven { url rootProject.file('maven') }
+//     }
+//     dependencies {
+//         classpath 'com.kaedea:publication:0.2.0'
+//     }
+// }
+// apply plugin: 'com.kaedea.publication'
+// publication {
+//     jarSources = false
+//     jarJavaDoc = false
+//     jarTests = false
+//
+//     GROUP('com.kaedea')
+//     VERSION_NAME('0.1.0-SNAPSHOT')
+//
+//     POM_NAME('Publication Android Sub')
+//     POM_ARTIFACT_ID('publication-android-sub')
+//     POM_PACKAGING('jar')
+//     POM_URL('https://github.com/kaedea/publication/')
+//     POM_DESCRIPTION('Demo android library of project Publications')
+//
+//     POM_SCM_URL('https://github.com/kaedea/publication/')
+//     POM_SCM_CONNECTION('scm:git:git://github.com/kaedea/publication.git')
+//     POM_SCM_DEV_CONNECTION('scm:git:ssh://git@github.com:kaedea/publication.git')
+//
+//     POM_LICENCE_NAME('The Apache Software License, Version 2.0')
+//     POM_LICENCE_URL('http://www.apache.org/licenses/LICENSE-2.0.txt')
+//     POM_LICENCE_DIST('repo')
+//
+//     POM_DEVELOPER_ID('kaedea')
+//     POM_DEVELOPER_NAME('Kaede Akatsuki')
+// }
 
-    GROUP('com.kaedea')
-    VERSION_NAME('0.1.0-SNAPSHOT')
-
-    POM_NAME('Publication Android Sub')
-    POM_ARTIFACT_ID('publication-android-sub')
-    POM_PACKAGING('jar')
-    POM_URL('https://github.com/kaedea/publication/')
-    POM_DESCRIPTION('Demo android library of project Publications')
-
-    POM_SCM_URL('https://github.com/kaedea/publication/')
-    POM_SCM_CONNECTION('scm:git:git://github.com/kaedea/publication.git')
-    POM_SCM_DEV_CONNECTION('scm:git:ssh://git@github.com:kaedea/publication.git')
-
-    POM_LICENCE_NAME('The Apache Software License, Version 2.0')
-    POM_LICENCE_URL('http://www.apache.org/licenses/LICENSE-2.0.txt')
-    POM_LICENCE_DIST('repo')
-
-    POM_DEVELOPER_ID('kaedea')
-    POM_DEVELOPER_NAME('Kaede Akatsuki')
-}
 // ----------
 // with 'bintray'
 // For non-builtin plugin, we should add classpath within 'build.gradle'
