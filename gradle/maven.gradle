@@ -26,9 +26,9 @@ def isAndroidProject() {
 
 def getExternalScript = {
     if (rootProject.file("gradle/$it").exists()) {
-        return rootProject.file("gradle/$it")
+        rootProject.file("gradle/$it")
     }
-    return "http://kaedea.github.com/publication/gradle/$it"
+    "http://kaedea.github.com/gradle-maven-publication/gradle/$it"
 }
 
 def getReleaseRepositoryUrl() {
