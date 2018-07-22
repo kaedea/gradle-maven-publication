@@ -79,14 +79,21 @@ class PublicationPlugin implements Plugin<Project> {
 
         project.plugins.apply(MavenPlugin)
         project.plugins.apply(SigningPlugin)
-        project.group = must(GROUP)
-        project.version = must(VERSION_NAME)
 
+        configureIdentifier()
         configureArtifactTasks()
         configurePom()
         configureUpload()
         configureSigning()
         configureBintray()
+    }
+
+    private void configureIdentifier() {
+        project.afterEvaluate {
+            project.group = must(GROUP)
+            project.version = must(VERSION_NAME)
+            // project.name is read-only thus nothing we can do here
+        }
     }
 
     private void configureArtifactTasks() {

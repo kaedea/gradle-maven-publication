@@ -21,7 +21,7 @@ def isReleaseBuild() {
 
 def getExternalScript = {
     if (rootProject.file("gradle/$it").exists()) {
-        rootProject.file("gradle/$it")
+        return rootProject.file("gradle/$it")
     }
     "http://kaedea.github.com/gradle-maven-publication/gradle/$it"
 }
