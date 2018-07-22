@@ -40,43 +40,16 @@ Of course, the scripts/plugin are designed to **work both with java and android 
 2. Apply the script file on demand in 'build.gradle'.
 3. Run the script tasks to publish artifacts to local/remote repository.
 
-Config the project properties like:
+Config the project properties (gradle.properties) like:
 
 ```shell
-# required: must be configurated
-# required here or system env: must be configurated in project properties or system environment
+GROUP=com.kaedea           
+VERSION_NAME=0.1.0-SNAPSHOT
 
-# ----------
-# Maven repository config
-# ----------
-RELEASE_REPOSITORY_URL=  (required here or system env)
-SNAPSHOT_REPOSITORY_URL= (required here or system env)
-
-NEXUS_USERNAME= (required here or system env)
-NEXUS_PASSWORD= (required here or system env)
-
-POM_URL=https://github.com/kaedea/gradle-maven-publication/                   (optional)
-POM_SCM_URL=https://github.com/kaedea/gradle-maven-publication/               (optional)
-POM_SCM_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git     (optional)
-POM_SCM_DEV_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git (optional)
-
-POM_LICENCE_NAME=The Apache Software License, Version 2.0      (optional)
-POM_LICENCE_URL=http://www.apache.org/licenses/LICENSE-2.0.txt (optional)
-POM_LICENCE_DIST=repo                                          (optional)
-
-POM_DEVELOPER_ID=kaedea           (optional)
-POM_DEVELOPER_NAME=Kaede Akatsuki (optional)
-
-# ----------
-# Maven artifact config
-# ----------
-GROUP=com.kaedea            (required)
-VERSION_NAME=0.1.0-SNAPSHOT (required)
-
-POM_NAME=Publication                                   (optional)
-POM_ARTIFACT_ID=publication                            (optional)
-POM_PACKAGING=jar|aar                                  (optional)
-POM_DESCRIPTION=Gradle plugin that make the publishing (optional)
+RELEASE_REPOSITORY_URL= 
+SNAPSHOT_REPOSITORY_URL=
+NEXUS_USERNAME=
+NEXUS_PASSWORD=
 ```
 
 Apply the script in your project's build.gradle:
@@ -115,17 +88,9 @@ Apply the bintray script to upload the artifacts to Bintray/JCenter (additional)
 Config the project properties like:
 
 ```shell
-# ----------
-# Bintray auth config
-# ----------
-BINTRAY_USERNAME= (required here or system env)
-BINTRAY_API_KEY=  (required here or system env)
-
-# ----------
-# Maven repo config
-# ----------
-BINTRAY_REPO=maven       (required)
-BINTRAY_NAME=publication (optional)
+BINTRAY_USERNAME=
+BINTRAY_API_KEY= 
+BINTRAY_REPO=maven
 ```
 
 Apply the script in your project's build.gradle as [Script](#Script) above, then apply the bintray script:
@@ -163,6 +128,89 @@ apply plugin: 'com.kaedea.publication'
 ```
 
 Config the plugin:
+
+```groovy
+publication {
+    GROUP('com.kaedea')
+    VERSION_NAME('0.1.0-SNAPSHOT')
+
+    RELEASE_REPOSITORY_URL('') 
+    SNAPSHOT_REPOSITORY_URL('')
+    NEXUS_USERNAME('')         
+    NEXUS_PASSWORD('')         
+
+    uploadToBintray = true            
+    BINTRAY_REPO('maven')             
+    BINTRAY_USERNAME('kaedea')        
+    BINTRAY_API_KEY('bintray_api_key')
+}
+```
+
+Now, here you go with the publish tasks
+
+```bash
+gradle :uploadArchives
+gradle :bintrayUpload
+```
+
+
+## Advanced Configuration
+
+There are much more extra configurations of both scripts and plugin.
+
+### Script
+
+```shell
+# 'optional': be configured or not
+# 'required': must be configurated
+# 'required here or system env': must be configurated in project properties or system environment
+
+# ----------
+# Maven repository config
+# ----------
+RELEASE_REPOSITORY_URL=  (required here or system env)
+SNAPSHOT_REPOSITORY_URL= (required here or system env)
+
+NEXUS_USERNAME= (required here or system env)
+NEXUS_PASSWORD= (required here or system env)
+
+POM_URL=https://github.com/kaedea/gradle-maven-publication/                   (optional)
+POM_SCM_URL=https://github.com/kaedea/gradle-maven-publication/               (optional)
+POM_SCM_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git     (optional)
+POM_SCM_DEV_CONNECTION=scm:git@github.com:kaedea/gradle-maven-publication.git (optional)
+
+POM_LICENCE_NAME=The Apache Software License, Version 2.0      (optional)
+POM_LICENCE_URL=http://www.apache.org/licenses/LICENSE-2.0.txt (optional)
+POM_LICENCE_DIST=repo                                          (optional)
+
+POM_DEVELOPER_ID=kaedea           (optional)
+POM_DEVELOPER_NAME=Kaede Akatsuki (optional)
+
+# ----------
+# Maven artifact config
+# ----------
+GROUP=com.kaedea            (required)
+VERSION_NAME=0.1.0-SNAPSHOT (required)
+
+POM_NAME=Publication                                   (optional)
+POM_ARTIFACT_ID=publication                            (optional)
+POM_PACKAGING=jar|aar                                  (optional)
+POM_DESCRIPTION=Gradle plugin that make the publishing (optional)
+
+# ----------
+# Bintray auth config
+# ----------
+BINTRAY_USERNAME= (required here or system env)
+BINTRAY_API_KEY=  (required here or system env)
+
+# ----------
+# Maven repo config
+# ----------
+BINTRAY_REPO=maven       (required)
+BINTRAY_NAME=publication (optional)
+```
+
+### Plugin
 
 ```groovy
 // You can configure the publishing in the following, or gradle.properties, or System.env
@@ -209,12 +257,6 @@ publication {
 }
 ```
 
-Now, here you go with the publish tasks
-
-```bash
-gradle :uploadArchives
-gradle :bintrayUpload
-```
 
 ## References
 
