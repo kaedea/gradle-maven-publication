@@ -1,5 +1,7 @@
 # Gradle Maven Publication
 
+[ ![Download](https://api.bintray.com/packages/kaedea/moe-studio/publication/images/download.svg) ](https://bintray.com/kaedea/moe-studio/publication/_latestVersion)
+
 ![Banner](doc/banner.png)
 
 Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven` or `maven-publish` plugin.
