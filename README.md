@@ -1,6 +1,6 @@
 # Gradle Maven Publication
 
-[ ![Download](https://api.bintray.com/packages/kaedea/moe-studio/publication/images/download.svg) ](https://bintray.com/kaedea/moe-studio/publication/_latestVersion)
+[![Download](https://api.bintray.com/packages/kaedea/moe-studio/publication/images/download.svg)](https://bintray.com/kaedea/moe-studio/publication/_latestVersion)
 
 ![Banner](doc/banner.png)
 
@@ -43,10 +43,10 @@ Of course, the scripts/plugin are designed to **work both with java and android 
 Config the project properties (gradle.properties) like:
 
 ```shell
-GROUP=com.kaedea           
+GROUP=com.kaedea
 VERSION_NAME=0.1.0-SNAPSHOT
 
-RELEASE_REPOSITORY_URL= 
+RELEASE_REPOSITORY_URL=
 SNAPSHOT_REPOSITORY_URL=
 NEXUS_USERNAME=
 NEXUS_PASSWORD=
@@ -89,7 +89,7 @@ Config the project properties like:
 
 ```shell
 BINTRAY_USERNAME=
-BINTRAY_API_KEY= 
+BINTRAY_API_KEY=
 BINTRAY_REPO=maven
 ```
 
@@ -134,14 +134,14 @@ publication {
     GROUP('com.kaedea')
     VERSION_NAME('0.1.0-SNAPSHOT')
 
-    RELEASE_REPOSITORY_URL('') 
+    RELEASE_REPOSITORY_URL('')
     SNAPSHOT_REPOSITORY_URL('')
-    NEXUS_USERNAME('')         
-    NEXUS_PASSWORD('')         
+    NEXUS_USERNAME('')
+    NEXUS_PASSWORD('')
 
-    uploadToBintray = true            
-    BINTRAY_REPO('maven')             
-    BINTRAY_USERNAME('kaedea')        
+    uploadToBintray = true
+    BINTRAY_REPO('maven')
+    BINTRAY_USERNAME('kaedea')
     BINTRAY_API_KEY('bintray_api_key')
 }
 ```
@@ -153,12 +153,11 @@ gradle :uploadArchives
 gradle :bintrayUpload
 ```
 
-
 ## Advanced Configuration
 
 There are much more extra configurations of both scripts and plugin.
 
-### Script
+### For Script
 
 ```shell
 # 'optional': be configured or not
@@ -210,7 +209,7 @@ BINTRAY_REPO=maven       (required)
 BINTRAY_NAME=publication (optional)
 ```
 
-### Plugin
+### For Plugin
 
 ```groovy
 // You can configure the publishing in the following, or gradle.properties, or System.env
@@ -256,7 +255,6 @@ publication {
     BINTRAY_API_KEY('bintray_api_key') // required input
 }
 ```
-
 
 ## References
 
