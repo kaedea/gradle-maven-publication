@@ -256,6 +256,10 @@ publication {
 }
 ```
 
+## Contributions
+
+The project takes **[git-flow](https://github.com/nvie/gitflow)** as princeple to contribute codes. Any pull-request should rebase and be merged into branch develop.
+
 ## References
 
 1. [https://docs.gradle.org/current/userguide/maven_plugin.html](https://docs.gradle.org/current/userguide/maven_plugin.html)
