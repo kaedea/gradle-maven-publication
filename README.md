@@ -256,10 +256,6 @@ publication {
 }
 ```
 
-## Contributions
-
-The project takes **[git-flow](https://github.com/nvie/gitflow)** as princeple to contribute codes. Any pull-request should rebase and be merged into branch develop.
-
 ## References
 
 1. [https://docs.gradle.org/current/userguide/maven_plugin.html](https://docs.gradle.org/current/userguide/maven_plugin.html)
@@ -267,6 +263,10 @@ The project takes **[git-flow](https://github.com/nvie/gitflow)** as princeple t
 1. [https://github.com/square/picasso/blob/master/gradle/gradle-mvn-push.gradle](https://github.com/square/picasso/blob/master/gradle/gradle-mvn-push.gradle)
 1. [https://github.com/dcendents/android-maven-gradle-plugin](https://github.com/dcendents/android-maven-gradle-plugin)
 1. [https://stackoverflow.com/questions/26874498/maven-publish-android-library-with-aar-and-source-jar](https://stackoverflow.com/questions/26874498/maven-publish-android-library-with-aar-and-source-jar)
+
+## Contributing
+
+Check [CONTRIBUTING.md](/CONTRIBUTING.md).
 
 ## License
 
