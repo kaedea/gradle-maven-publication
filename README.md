@@ -1,6 +1,7 @@
 # Gradle Maven Publication
 
 [![Download](https://api.bintray.com/packages/kaedea/moe-studio/publication/images/download.svg)](https://bintray.com/kaedea/moe-studio/publication/_latestVersion)
+[![Build Status](https://travis-ci.org/kaedea/gradle-maven-publication.svg?branch=develop)](https://travis-ci.org/kaedea/gradle-maven-publication)
 
 ![Banner](doc/banner.png)
 
