@@ -22,4 +22,4 @@ git:
 #   - git submodule init && git submodule update
 
 script:
-  - if [[ $TRAVIS_PULL_REQUEST == 'true' ]]; ./gradlew :publication:test --i --S; fi
+  - $(if [[ $TRAVIS_PULL_REQUEST == 'true' ]]; ./gradlew :publication:test --i --S; fi)
