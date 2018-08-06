@@ -7,16 +7,32 @@ buildscript {
     repositories {
         jcenter()
         mavenCentral()
+        google()
+        gradlePluginPortal()
     }
 }
+sourceSets {
+    ['main', 'test', 'androidTest'].each {
+        "$it" {
+            java.srcDirs += file("src/$it/kotlin")
+            java.srcDirs += file("src/$it/groovy")
+        }
+    }
+}
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 dependencies {
     compile gradleApi()
     compile localGroovy()
     compile 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-}
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+    // Test
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.assertj:assertj-core:3.10.0'
+    testImplementation 'com.github.stefanbirkner:system-rules:1.18.0'
+    testImplementation "com.android.tools.build:gradle:$android_gradle_version"
+}
 
 // ----------
 // with 'maven'
