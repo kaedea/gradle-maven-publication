@@ -4,7 +4,6 @@
 
 package com.kaedea.gradle.publication
 
-import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -14,14 +13,13 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
-import static com.kaedea.gradle.publication.Extension.RELEASE_REPOSITORY_URL
-import static com.kaedea.gradle.publication.Extension.SNAPSHOT_REPOSITORY_URL
+import static com.kaedea.gradle.publication.Extension.*
 import static org.assertj.core.api.Assertions.assertThat
 
 @RunWith(JUnit4.class)
 class ExtensionTest {
 
-    private Project project
+    private def project
     private Extension extension
 
     @Rule
@@ -44,27 +42,40 @@ class ExtensionTest {
     void setUp() {
         project = ProjectBuilder.builder().withName("project").build()
         extension = new Extension()
+
+        extension.with {
+            jarSources = true
+            jarJavaDoc = true
+            jarTests = true
+            uploadToBintray = true
+        }
+        extension.GROUP('com.kaedea')
+        extension.VERSION_NAME('0.1.0-test')
     }
 
     @Test
-    void defaultReleaseRepositoryUrl() {
+    void testConfigureFromPluginExtension() {
+        assertThat(extension.jarSources).isEqualTo(true)
+        assertThat(extension.jarJavaDoc).isEqualTo(true)
+        assertThat(extension.jarTests).isEqualTo(true)
+        assertThat(extension.uploadToBintray).isEqualTo(true)
+        assertThat(opt(GROUP)).isEqualTo('com.kaedea')
+        assertThat(opt(VERSION_NAME)).isEqualTo('0.1.0-test')
+    }
+
+    @Test
+    void testConfigureFromPluginEnvironment() {
         assertThat(opt(RELEASE_REPOSITORY_URL)).isNull()
         String environment = env(RELEASE_REPOSITORY_URL)
-        assertThat(environment).isNotBlank()
+        assertThat(opt(RELEASE_REPOSITORY_URL)).isNotBlank()
         assertThat(opt(RELEASE_REPOSITORY_URL)).isEqualTo(environment)
-        String property = pro(RELEASE_REPOSITORY_URL)
-        assertThat(property).isNotBlank()
-        assertThat(opt(RELEASE_REPOSITORY_URL)).isEqualTo(property)
     }
 
     @Test
-    void defaultSnapshotRepositoryUrl() {
+    void testConfigureFromPluginProjectProperty() {
         assertThat(opt(SNAPSHOT_REPOSITORY_URL)).isNull()
-        String environment = env(SNAPSHOT_REPOSITORY_URL)
-        assertThat(environment).isNotBlank()
-        assertThat(opt(SNAPSHOT_REPOSITORY_URL)).isEqualTo(environment)
         String property = pro(SNAPSHOT_REPOSITORY_URL)
-        assertThat(property).isNotBlank()
+        assertThat(opt(SNAPSHOT_REPOSITORY_URL)).isNotBlank()
         assertThat(opt(SNAPSHOT_REPOSITORY_URL)).isEqualTo(property)
     }
 }
