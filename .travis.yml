@@ -15,8 +15,9 @@ android:
     - 'google-gdk-license-.+'
 
 env:
-  - BUILD_STATUS=unspecified
-  - COLON=":"
+  global:
+    - BUILD_STATUS=unspecified
+    - COLON=":"
 
 git:
   submodules: false
