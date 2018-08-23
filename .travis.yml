@@ -25,13 +25,25 @@ git:
 #   - git submodule init && git submodule update
 
 script:
-  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then ./gradlew :publication:test --i --S; fi
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then \
+    ./gradlew :publication:test --i --S; \
+    fi
 
 after_success:
-  - BUILD_STATUS=build successfully
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then \
+    BUILD_STATUS=build successfully; \
+    fi
   
 after_failure:
-  - BUILD_STATUS=build failed
-
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then \
+    BUILD_STATUS=build failed; \
+    fi
+  
 after_script:
-  - curl -H "Authorization: token $GITHUB_TOKEN" -X POST -d "{\"body\": \"travis-bot: $BUILD_STATUS\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then \
+    curl \
+    -H "Authorization&#58; token ${GITHUB_TOKEN}" \
+    -X POST \
+    -d "{\"body\"&#58; \"Hello world\"}" \
+    "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments" \
+    fi
