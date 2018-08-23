@@ -28,22 +28,23 @@ git:
 
 script:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    ./gradlew :publication:test --i --S;
+      ./gradlew :publication:test --i --S;
     fi
 
 after_success:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    BUILD_STATUS="build successfully";
+      BUILD_STATUS="build successfully";
     fi
   
 after_failure:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    BUILD_STATUS="build failed";
+      BUILD_STATUS="build failed";
     fi
   
 after_script:
-  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    CURL_H="Authorization$COLON token $GITHUB_TOKEN"
-    CURL_D="{\"body\"$COLON \"travis bot$COLON $BUILD_STATUS\"}"
-    curl -H $CURL_H -X POST -d $CURL_D "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
+  - |
+    if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+      CURL_H="Authorization$COLON token $GITHUB_TOKEN"
+      CURL_D="{\"body\"$COLON \"travis bot$COLON $BUILD_STATUS\"}"
+      curl -H $CURL_H -X POST -d $CURL_D "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
     fi
