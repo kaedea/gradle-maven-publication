@@ -3,16 +3,19 @@ sudo: true
 jdk: oraclejdk8
 
 android:
-    components:
-        - tools
-        - platform-tools
-        - build-tools-27.0.3
-        - android-27
-        - extra-android-m2repository
-    licenses:
-        - 'android-sdk-preview-license-.+'
-        - 'android-sdk-license-.+'
-        - 'google-gdk-license-.+'
+  components:
+    - tools
+    - platform-tools
+    - build-tools-27.0.3
+    - android-27
+    - extra-android-m2repository
+  licenses:
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
+env:
+  - BUILD_STATUS=unspecified
 
 git:
   submodules: false
@@ -23,3 +26,12 @@ git:
 
 script:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then ./gradlew :publication:test --i --S; fi
+
+after_success:
+  - BUILD_STATUS=build successfully
+  
+after_failure:
+  - BUILD_STATUS=build failed
+
+after_script:
+  - curl -H "Authorization: token $GITHUB_TOKEN" -X POST -d "{\"body\": \"travis-bot: $BUILD_STATUS\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
