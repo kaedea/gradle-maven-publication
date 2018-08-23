@@ -16,7 +16,7 @@ android:
 
 env:
   global:
-    - BUILD_STATUS=unspecified
+    - BUILD_STATUS="unspecified"
     - COLON=":"
 
 git:
@@ -33,12 +33,12 @@ script:
 
 after_success:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    BUILD_STATUS=build successfully;
+    BUILD_STATUS="build successfully";
     fi
   
 after_failure:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    BUILD_STATUS=build failed;
+    BUILD_STATUS="build failed";
     fi
   
 after_script:
