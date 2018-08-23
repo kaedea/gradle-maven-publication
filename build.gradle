@@ -6,6 +6,7 @@
 
 buildscript {
     ext {
+        android_gradle_version = '3.1.2'
         kotlin_version = '1.2.30'
         is_jitpack = 'true' == System.env.JITPACK
     }
@@ -14,7 +15,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.2'
+        classpath "com.android.tools.build:gradle:$android_gradle_version"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

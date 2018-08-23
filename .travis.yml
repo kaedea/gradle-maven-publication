@@ -1,0 +1,46 @@
+language: android
+sudo: true
+jdk: oraclejdk8
+
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-27.0.3
+    - android-27
+    - extra-android-m2repository
+  licenses:
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
+env:
+  - BUILD_STATUS=unspecified
+  - COLON=":"
+
+git:
+  submodules: false
+
+# before_install:
+#   - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+#   - git submodule init && git submodule update
+
+script:
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+    ./gradlew :publication:test --i --S;
+    fi
+
+after_success:
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+    BUILD_STATUS=build successfully;
+    fi
+  
+after_failure:
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+    BUILD_STATUS=build failed;
+    fi
+  
+after_script:
+  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+    curl -H "Authorization$COLON token $GITHUB_TOKEN" -X POST -d "{\"body\"$COLON \"travis bot$COLON $BUILD_STATUS\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
+    fi
