@@ -18,6 +18,7 @@ env:
   global:
     - BUILD_STATUS="unspecified"
     - COLON=":"
+    - TRAVIS_BUILD_URL="https://travis-ci.org/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID"
 
 git:
   submodules: false
@@ -45,8 +46,9 @@ after_script:
   - |
     # Append comment to github's pull-request
     if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+      COMMENT="travis bot$COLON $BUILD_STATUS [job][$TRAVIS_BUILD_URL]"
       CURL_H="Authorization$COLON token $GITHUB_TOKEN"
-      CURL_D="{\"body\"$COLON \"travis bot$COLON $BUILD_STATUS\"}"
+      CURL_D="{\"body\"$COLON \"$COMMENT\"}"
       echo "curl params = curl -H \"$CURL_H\" -X POST -d \"$CURL_D\""
       curl -H "$CURL_H" -X POST -d "$CURL_D" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
     fi
