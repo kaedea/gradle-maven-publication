@@ -43,8 +43,10 @@ after_failure:
   
 after_script:
   - |
+    # Append comment to github's pull-request
     if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
       CURL_H="Authorization$COLON token $GITHUB_TOKEN"
       CURL_D="{\"body\"$COLON \"travis bot$COLON $BUILD_STATUS\"}"
+      echo "curl params = curl -H \"$CURL_H\" -X POST -d \"$CURL_D\""
       curl -H "$CURL_H" -X POST -d "$CURL_D" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
     fi
