@@ -7,9 +7,9 @@
 
 Gradle scripts/plugin that helps to publish jar/aar artifacts with gradle `maven` or `maven-publish` plugin.
 
-This repository contains two components: scripts and plugin.
-
-The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but suport with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. The plugin is going to be a custom gradle plugin which makes the workflow much simpler.
+This repository contains two components: scripts and plugin:
+1. The scripts work just like [chrisbanes/gradle-mvn-push](https://github.com/chrisbanes/gradle-mvn-push) but support with both `maven` and `maven-publish`, as well as more customization with `pom.xml`. 
+2. The plugin is going to be a custom gradle plugin which makes the workflow much simpler.
 
 Of course, the scripts/plugin are designed to **work both with java and android project**.
 

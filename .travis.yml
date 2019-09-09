@@ -15,8 +15,10 @@ android:
     - 'google-gdk-license-.+'
 
 env:
-  - BUILD_STATUS=unspecified
-  - COLON=":"
+  global:
+    - BUILD_STATUS="unspecified"
+    - COLON=":"
+    - TRAVIS_BUILD_URL="https://travis-ci.org/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID"
 
 git:
   submodules: false
@@ -27,20 +29,26 @@ git:
 
 script:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    ./gradlew :publication:test --i --S;
+      ./gradlew :publication:test --i --S;
     fi
 
 after_success:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    BUILD_STATUS=build successfully;
+      BUILD_STATUS="build successfully";
     fi
   
 after_failure:
   - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    BUILD_STATUS=build failed;
+      BUILD_STATUS="build failed";
     fi
   
 after_script:
-  - if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
-    curl -H "Authorization$COLON token $GITHUB_TOKEN" -X POST -d "{\"body\"$COLON \"travis bot$COLON $BUILD_STATUS\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
+  - |
+    # Append comment to github's pull-request
+    if [ -n "${TRAVIS_PULL_REQUEST}" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+      COMMENT="travis bot$COLON [$BUILD_STATUS]($TRAVIS_BUILD_URL)"
+      CURL_H="Authorization$COLON token $GITHUB_TOKEN"
+      CURL_D="{\"body\"$COLON \"$COMMENT\"}"
+      echo "curl params = curl -H \"$CURL_H\" -X POST -d \"$CURL_D\""
+      curl -H "$CURL_H" -X POST -d "$CURL_D" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/issues/${TRAVIS_PULL_REQUEST}/comments"
     fi
